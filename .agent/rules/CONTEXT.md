@@ -9,7 +9,7 @@
 |---|---|---|
 | **Frontend** | Next.js 14/15, Tailwind CSS, Shadcn/ui, Zustand, TanStack Query | Static HTML Export (`output: 'export'`) deployed to **AWS S3** + **CloudFront CDN** (Serverless, cheap, high-scale). |
 | **Backend API** | Laravel 11 (PHP 8.3) with **Laravel Octane** (RoadRunner/Swoole) | Containerized on **AWS ECS Fargate** (Serverless Container), balanced by **Application Load Balancer (ALB)**. |
-| **Database** | MySQL 8.0 | **AWS RDS MySQL** (Multi-AZ in secure database subnets, no public access). |
+| **Database** | PostgreSQL 16 | **AWS RDS PostgreSQL** (Multi-AZ in secure database subnets, no public access). |
 | **Queue & Cache** | Redis | **AWS ElastiCache Redis** (Managed service for Laravel Horizon queue and session caching). |
 | **WebSockets** | Pusher (Client/Broadcaster) or Soketi | Pusher Free Tier (to avoid self-hosting overhead) or Soketi container in Private Subnet. |
 | **DevOps & IaC** | Terraform, Docker-compose, GitHub Actions | 100% Infrastructure as Code (IaC) via **Terraform**. Pipeline builds Docker, runs Pest tests, runs Trivy security scan, and triggers ECS Rolling Update. |
@@ -47,8 +47,8 @@ Zeflyo/
   - **Local Dev**: Runs via Docker-compose. Webhooks are tunneled from Facebook using **Ngrok** or Cloudflare Tunnel to the Nginx local container port.
   - **Staging**: Pushed to `staging` branch, auto-deployed to staging AWS cluster for QA testing and Security Pentesting.
   - **Production**: Pushed to `main` branch, auto-deployed to AWS Production ECS and S3 + CloudFront CDN.
-- **Security & SOC Rules (Thành viên 2)**:
-  - All Facebook tokens must be encrypted in MySQL using Laravel Eloquent Encrypted Casts.
+- **Security & SOC Rules (Khoa)**:
+  - All Facebook tokens must be encrypted in PostgreSQL using Laravel Eloquent Encrypted Casts.
   - Periodic penetration testing (Pentest) on Staging APIs to prevent SQLi, CSRF, IDOR, and session hijacking.
   - Application audit log tracking of critical actions (e.g., changes to Auto-reply rules) linked to AWS CloudWatch alarms.
 

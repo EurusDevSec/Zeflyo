@@ -1,0 +1,94 @@
+services:
+
+  # Web server
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_zeflyo
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./backend:/var/www/html
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - app
+      - soketi
+    networks:
+      - zeflyo-network
+
+  # Laravel application (PHP Octane running on CLI)
+  app:
+    build:
+      context: .
+      dockerfile: ./docker/app/Dockerfile
+    container_name: app_zeflyo
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=zeflyo
+      - DB_USERNAME=zeflyo_user
+      - DB_PASSWORD=zeflyo_password
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - zeflyo-network
+
+  # PostgreSQL database
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres_zeflyo
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: zeflyo
+      POSTGRES_USER: zeflyo_user
+      POSTGRES_PASSWORD: zeflyo_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - zeflyo-network
+
+  # Redis for cache & queues (Horizon)
+  redis:
+    image: redis:alpine
+    container_name: redis_zeflyo
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - zeflyo-network
+
+  # Soketi (Pusher-compatible WebSocket server)
+  soketi:
+    image: quay.io/soketi/soketi:1.6-16-alpine
+    container_name: soketi_zeflyo
+    restart: unless-stopped
+    ports:
+      - "6001:6001"
+    environment:
+      - SOKETI_DEBUG=1
+      - SOKETI_DEFAULT_APP_ID=zeflyo_app
+      - SOKETI_DEFAULT_APP_KEY=zeflyo_key
+      - SOKETI_DEFAULT_APP_SECRET=zeflyo_secret
+    networks:
+      - zeflyo-network
+
+networks:
+  zeflyo-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

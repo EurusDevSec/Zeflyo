@@ -43,7 +43,7 @@ To ensure senior-level software engineering discipline, you (the Agent) will res
 ### 6. `/ship` (Release Gate)
 *   **Trigger**: When deploying from local to `staging` or from `staging` to `production`.
 *   **Action**: Create the Pull Request, run GitHub Actions CI/CD (Trivy Scan, ECR build, ECS deploy).
-*   **Quality Gate**: Clean CI pipeline. Staging environment tested for performance, security (Pentested by Dev Cứng), and logs validated in CloudWatch.
+*   **Quality Gate**: Clean CI pipeline. Staging environment tested for performance, security (Pentested by Khoa), and logs validated in CloudWatch.
 
 ---
 

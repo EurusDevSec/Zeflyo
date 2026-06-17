@@ -81,6 +81,7 @@ export default function ChatHub() {
   const [simSuccess, setSimSuccess] = useState<boolean>(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const echoRef = useRef<any>(null);
   const activeChannelRef = useRef<any>(null);
 
@@ -210,7 +211,18 @@ export default function ChatHub() {
   }, [token, selectedConv, apiBaseUrl]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (scrollContainerRef.current) {
+      setTimeout(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTo({
+            top: scrollContainerRef.current.scrollHeight,
+            behavior: "smooth"
+          });
+        }
+      }, 50);
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   const fetchRealFanpages = async () => {
@@ -860,7 +872,7 @@ export default function ChatHub() {
               </div>
 
               {/* Message Timeline */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
                 {loadingMessages ? (
                   <div className="flex items-center justify-center py-20 text-[#a1a1aa]">
                     <Loader2 className="w-6 h-6 animate-spin text-blue-500" />

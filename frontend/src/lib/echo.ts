@@ -25,6 +25,7 @@ export const getEchoInstance = (token: string, apiBaseUrl: string) => {
   return new Echo({
     broadcaster: 'pusher',
     key: 'zeflyo_key',
+    cluster: 'mt1',
     wsHost: host,
     wsPort: wsPort,
     wssPort: wsPort,

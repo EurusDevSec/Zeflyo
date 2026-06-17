@@ -17,21 +17,21 @@
 ### Phase 1: Setup & Core Auth (Day 1 - 3) - [Specs](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docs/phases/phase1_setup_auth.md)
 - [x] Write project plan [plan.md](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docs/plan.md) and [implementation_plan.md](file:///C:/Users/ACER/.gemini/antigravity-ide/brain/0db0bc85-e913-4c3e-af7a-005ff44c8899/implementation_plan.md).
 - [x] Write detailed phase documents in [docs/phases/](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docs/phases/).
-- [ ] DevOps (Hoàng): Setup local `docker-compose.yml` (Laravel, Nginx, PostgreSQL, Redis, Soketi) & local setup instructions.
+- [x] DevOps (Hoàng): Setup local `docker-compose.yml` (Laravel, Nginx, PostgreSQL, Redis, Soketi) & local setup instructions.
 - [ ] DevOps (Hoàng): Set up VPC and initial RDS/ECS placeholders using Terraform.
-- [ ] Backend (Khoa): Initialize Laravel 11. Implement Facebook Socialite Login OAuth & Fanpage Connection.
-- [ ] Frontend (Tiến): Initialize Next.js. Design basic layout, login UI, and Page Connection UI.
+- [x] Backend (Khoa): Initialize Laravel 11. Implement Facebook Socialite Login OAuth & Fanpage Connection.
+- [x] Frontend (Tiến): Initialize Next.js. Design basic layout, login UI, and Page Connection UI.
 
 ### Phase 2: Webhooks & Queue Processing (Day 4 - 6) - [Specs](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docs/phases/phase2_webhooks_queue.md)
-- [ ] DevOps (Hoàng): Setup Ngrok/Tunnel for local Webhook callback testing.
-- [ ] Backend (Khoa): Webhook verification endpoint and API payload ingestion.
-- [ ] Backend (Khoa): Setup Laravel Horizon & Redis queues to parse incoming Facebook comments/messages asynchronously.
-- [ ] Frontend (Tiến): Build Switch toggle UI and API endpoints to activate automation for pages.
+- [x] DevOps (Hoàng): Setup Ngrok/Tunnel for local Webhook callback testing.
+- [x] Backend (Khoa): Webhook verification endpoint and API payload ingestion.
+- [x] Backend (Khoa): Setup Laravel Horizon & Redis queues to parse incoming Facebook comments/messages asynchronously.
+- [x] Frontend (Tiến): Build Switch toggle UI and API endpoints to activate automation for pages.
 
 ### Phase 3: Live Chat UI & Real-Time Sync (Day 7 - 9) - [Specs](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docs/phases/phase3_realtime_chat.md)
-- [ ] DevOps (Hoàng): Setup WebSocket server (Soketi/Pusher).
-- [ ] Backend (Khoa): Implement Laravel Broadcasting events to trigger real-time messages. API load chat history.
-- [ ] Frontend (Tiến): Live Chat Hub UI (Next.js) displaying dynamic inbox and active conversation bubbles. Laravel Echo WebSockets integration.
+- [x] DevOps (Hoàng): Setup WebSocket server (Soketi/Pusher).
+- [x] Backend (Khoa): Implement Laravel Broadcasting events to trigger real-time messages. API load chat history.
+- [x] Frontend (Tiến): Live Chat Hub UI (Next.js) displaying dynamic inbox and active conversation bubbles. Laravel Echo WebSockets integration.
 
 ### Phase 4: Automation & AI Engine (Day 10 - 11) - [Specs](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docs/phases/phase4_automation_ai.md)
 - [ ] Backend (Khoa): Build keyword-based auto-reply rules engine.

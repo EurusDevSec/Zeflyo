@@ -14,6 +14,8 @@ Dự án được thiết kế dưới cấu trúc **Micro-services local** (Doc
 *   **Cache & Queue:** Redis (Port `6379`).
 *   **WebSocket Broadcast:** Soketi Server (Pusher compatible) (Port `6001`).
 
+
+![HighLevel Architect](image.png)
 ---
 
 ## ⚡ Quick Start — Khởi Chạy Tự Động (Khuyên Dùng)

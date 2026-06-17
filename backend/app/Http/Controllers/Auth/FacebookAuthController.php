@@ -113,6 +113,18 @@ class FacebookAuthController extends Controller
             ]
         );
 
+        // Ensure the demo Fanpage exists in database for this user
+        Fanpage::firstOrCreate(
+            ['fb_page_id' => '1028776643660761'],
+            [
+                'user_id' => $user->id,
+                'name' => 'Zeflyo Shop',
+                'access_token' => 'mock_page_token_123',
+                'avatar_url' => null,
+                'is_active' => true,
+            ]
+        );
+
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([

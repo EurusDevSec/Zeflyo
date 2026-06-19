@@ -19,7 +19,10 @@ import {
   ChevronRight,
   Download,
   FileSpreadsheet,
-  Copy
+  Copy,
+  Home,
+  MessageSquare,
+  Sliders
 } from "lucide-react";
 
 interface Fanpage {
@@ -461,7 +464,7 @@ export default function PostScheduler() {
             <span className="font-extrabold text-white text-base">Z</span>
           </div>
           <span className="text-lg font-bold tracking-wider bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent logo-text">
-            AUTOWORK
+            ZEFLYO
           </span>
         </div>
 
@@ -472,43 +475,26 @@ export default function PostScheduler() {
         </div>
 
         {/* Sidebar Navigation Menu */}
-        <nav className="flex-1 px-4 py-6 overflow-y-auto flex flex-col gap-4 custom-scrollbar">
-          {/* Menu Section 1 */}
-          <div className="flex flex-col gap-1.5">
-            <button className="flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-zinc-900 text-zinc-400 hover:text-zinc-200 text-xs font-semibold tracking-wider uppercase">
-              <span>Đăng bài tự động với AI</span>
-              <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
-            </button>
-            <div className="pl-4 flex flex-col gap-1">
-              <span className="px-3.5 py-2 text-zinc-550 hover:text-zinc-300 text-xs font-medium cursor-pointer rounded-lg hover:bg-zinc-900/30">Tự động đăng từ chủ đề & website</span>
-              <span className="px-3.5 py-2 text-zinc-550 hover:text-zinc-300 text-xs font-medium cursor-pointer rounded-lg hover:bg-zinc-900/30">Thiết lập lịch đăng</span>
-              <span className="px-3.5 py-2 text-zinc-550 hover:text-zinc-300 text-xs font-medium cursor-pointer rounded-lg hover:bg-zinc-900/30">Quản lý lịch đăng</span>
-            </div>
-          </div>
+        <nav className="flex-1 px-4 py-6 overflow-y-auto flex flex-col gap-3 custom-scrollbar">
+          {/* Dashboard Link */}
+          <a
+            href="/"
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
+          >
+            <Home className="w-4 h-4 text-zinc-500" />
+            <span>Trang chủ</span>
+          </a>
 
-          {/* Menu Section 2 */}
-          <div className="flex flex-col gap-1.5">
-            <button className="flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-zinc-900 text-zinc-400 hover:text-zinc-200 text-xs font-semibold tracking-wider uppercase">
-              <span>Đăng từ ảnh/video</span>
-              <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
-            </button>
-          </div>
-
-          {/* Menu Section 3 */}
-          <div className="flex flex-col gap-1.5">
-            <button className="flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-zinc-900 text-zinc-400 hover:text-zinc-200 text-xs font-semibold tracking-wider uppercase">
-              <span>Đăng từ sản phẩm</span>
-              <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
-            </button>
-          </div>
-
-          {/* Menu Section 4 - Active */}
-          <div className="flex flex-col gap-1.5">
-            <button className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-zinc-900 text-zinc-200 text-xs font-semibold tracking-wider uppercase">
-              <span>Đăng từ bài viết có sẵn</span>
+          {/* Post Scheduler Link (Active) */}
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between px-3.5 py-3 bg-zinc-900 text-zinc-200 rounded-xl text-xs font-semibold tracking-wider uppercase">
+              <span className="flex items-center gap-3">
+                <CalendarIcon className="w-4 h-4 text-blue-500" />
+                Lên lịch đăng bài
+              </span>
               <ChevronDown className="w-3.5 h-3.5 text-blue-400" />
-            </button>
-            <div className="pl-4 flex flex-col gap-1.5">
+            </div>
+            <div className="pl-4 mt-1 flex flex-col gap-1.5 border-l border-zinc-800 ml-5">
               <button 
                 onClick={() => setActiveTab("setup")}
                 className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -531,6 +517,24 @@ export default function PostScheduler() {
               </button>
             </div>
           </div>
+
+          {/* Live Chat Hub Link */}
+          <a
+            href="/chat"
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
+          >
+            <MessageSquare className="w-4 h-4 text-zinc-500" />
+            <span>Hộp thư tập trung</span>
+          </a>
+
+          {/* Auto-reply Rules Link */}
+          <a
+            href="/rules"
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
+          >
+            <Sliders className="w-4 h-4 text-zinc-500" />
+            <span>Luật Auto-Reply</span>
+          </a>
         </nav>
 
         {/* Sidebar Footer */}
@@ -556,7 +560,7 @@ export default function PostScheduler() {
             <a href="/" className="p-2 rounded-xl bg-zinc-900 border border-zinc-805 text-zinc-400">
               <ArrowLeft className="w-4 h-4" />
             </a>
-            <span className="font-bold text-sm tracking-wider bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent logo-text">AUTOWORK</span>
+            <span className="font-bold text-sm tracking-wider bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent logo-text">ZEFLYO</span>
           </div>
 
           <div className="flex items-center gap-2">

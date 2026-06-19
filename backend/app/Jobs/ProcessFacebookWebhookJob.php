@@ -113,6 +113,11 @@ class ProcessFacebookWebhookJob implements ShouldQueue
             broadcast(new \App\Events\MessageReceived($interaction, $customer))->toOthers();
 
             Log::info("Saved Messenger interaction in DB. From Customer: " . ($isFromCustomer ? 'Yes' : 'No'));
+
+            // Auto-reply logic: Only if the incoming message is from a customer
+            if ($isFromCustomer) {
+                $this->checkAndTriggerAutoReply($text, $customer, $fanpage, 'message', $fbMessageId);
+            }
         }
     }
 
@@ -163,6 +168,117 @@ class ProcessFacebookWebhookJob implements ShouldQueue
             broadcast(new \App\Events\MessageReceived($interaction, $customer))->toOthers();
 
             Log::info("Saved Fanpage Comment interaction in DB: {$senderName} - \"{$message}\"");
+
+            // Auto-reply logic
+            $this->checkAndTriggerAutoReply($message, $customer, $fanpage, 'comment', $commentId, $postId);
+        }
+    }
+
+    /**
+     * Check if the incoming message contains keywords matching active AutoReplyRules.
+     */
+    protected function checkAndTriggerAutoReply(string $text, Customer $customer, Fanpage $fanpage, string $type, string $fbItemId, ?string $postId = null): void
+    {
+        $incomingText = mb_strtolower(trim($text));
+        
+        $rules = \App\Models\AutoReplyRule::where('fanpage_id', $fanpage->id)
+            ->where('is_active', true)
+            ->get();
+
+        foreach ($rules as $rule) {
+            $keyword = mb_strtolower(trim($rule->keyword));
+            
+            // Check for keyword containment
+            if ($incomingText === $keyword || mb_strpos($incomingText, $keyword) !== false) {
+                Log::info("Auto-reply rule matched! Keyword: {$rule->keyword}, Reply Content: {$rule->reply_content}");
+                
+                $replyFbItemId = 'auto_reply.' . uniqid() . '.' . time();
+                
+                // Save outgoing automated interaction in DB
+                $interaction = Interaction::create([
+                    'customer_id' => $customer->id,
+                    'fanpage_id' => $fanpage->id,
+                    'type' => $type,
+                    'fb_item_id' => $replyFbItemId,
+                    'fb_post_id' => $postId,
+                    'content' => $rule->reply_content,
+                    'is_from_customer' => false,
+                ]);
+
+                // Call Meta APIs to send response back
+                if ($type === 'message') {
+                    $this->sendFacebookMessage($customer->fb_customer_id, $rule->reply_content, $fanpage);
+                } else if ($type === 'comment') {
+                    $this->sendFacebookCommentReply($fbItemId, $rule->reply_content, $fanpage);
+                }
+
+                // Broadcast message sent event so it updates dynamically in the Live Chat UI
+                broadcast(new \App\Events\MessageSent($interaction, $customer))->toOthers();
+                
+                // Stop evaluating rules after the first match
+                break;
+            }
+        }
+    }
+
+    /**
+     * Send Messenger response to customer.
+     */
+    protected function sendFacebookMessage(string $recipientPsid, string $text, Fanpage $fanpage): bool
+    {
+        try {
+            $pageToken = $fanpage->access_token;
+            if ($pageToken === 'mock_page_token_123') {
+                Log::info("Mock Facebook Message Sent: To={$recipientPsid}, Msg=\"{$text}\"");
+                return true;
+            }
+
+            $response = Http::post("https://graph.facebook.com/v20.0/me/messages", [
+                'recipient' => ['id' => $recipientPsid],
+                'message' => ['text' => $text],
+                'access_token' => $pageToken
+            ]);
+
+            if ($response->successful()) {
+                Log::info("Facebook Message Sent successfully to PSID: {$recipientPsid}");
+                return true;
+            }
+
+            Log::error("Facebook Send Message API failed: " . $response->body());
+            return false;
+        } catch (\Exception $e) {
+            Log::error("Exception in Facebook Send Message API: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Send Comment reply.
+     */
+    protected function sendFacebookCommentReply(string $commentId, string $text, Fanpage $fanpage): bool
+    {
+        try {
+            $pageToken = $fanpage->access_token;
+            if ($pageToken === 'mock_page_token_123') {
+                Log::info("Mock Facebook Comment Reply: CommentID={$commentId}, Reply=\"{$text}\"");
+                return true;
+            }
+
+            $response = Http::post("https://graph.facebook.com/v20.0/{$commentId}/comments", [
+                'message' => $text,
+                'access_token' => $pageToken
+            ]);
+
+            if ($response->successful()) {
+                Log::info("Facebook Comment Reply Sent successfully to Comment ID: {$commentId}");
+                return true;
+            }
+
+            Log::error("Facebook Comment Reply API failed: " . $response->body());
+            return false;
+        } catch (\Exception $e) {
+            Log::error("Exception in Facebook Comment Reply API: " . $e->getMessage());
+            return false;
         }
     }
 

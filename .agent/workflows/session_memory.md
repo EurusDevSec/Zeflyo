@@ -1,25 +1,25 @@
 # 💾 SESSION MEMORY — Zeflyo Project
-> Last Checkpoint: 2026-06-17 | Status: Phase 3 (Live Chat Hub & WebSockets) — 100% COMPLETE
+> Last Checkpoint: 2026-06-19 | Status: Phase 4 Automation (Scheduler & Rules) — 100% COMPLETE
 
 ---
 
 ## ⚡ Active Task Completed (Những việc ĐÃ HOÀN THÀNH trong session)
-*   **[Phase 1] Base Setup & Auth:**
-    *   Sửa lỗi Facebook Login HTTP local bằng cách thêm cơ chế **Dev Login (Real Backend)** gọi `/api/auth/demo` đăng nhập trực tiếp tài khoản Demo.
-*   **[Phase 2] Webhooks & Queue Setup:**
-    *   Khắc phục lỗi 500 khi lưu Fanpage bằng cách thay đổi kiểu dữ liệu cột `access_token` và `avatar_url` trong bảng `fanpages` thành `TEXT` thông qua migration [2026_06_17_085000_alter_fanpages_columns_to_text.php](file:///r:/_Projects/Eurus_Workspace/Zeflyo/backend/database/migrations/2026_06_17_085000_alter_fanpages_columns_to_text.php).
-*   **[Phase 3] Live Chat Hub & WebSockets:**
-    *   Tích hợp thành công Pusher SDK gọi phát sự kiện thời gian thực qua Soketi Server (Port 6001).
-    *   Tạo các API: danh sách chat (`GET /api/conversations`), lịch sử chat (`GET /api/conversations/{customer}/messages`), gửi tin nhắn phản hồi (`POST /api/conversations/{customer}/messages`), và bật/tắt AI cho khách hàng (`POST /customers/{customer}/toggle-ai`).
-    *   Thiết kế giao diện chat 3 cột Next.js (`src/app/chat/page.tsx`) kết nối với Echo client nhận sự kiện real-time tự động thêm tin nhắn mà không cần F5.
-    *   Kiểm thử hoàn tất việc gửi tin nhắn thật từ tài khoản Facebook cá nhân và các gói tin webhook giả lập thành công ✅.
+*   **[Phase 4] Automation - Scheduler & Auto-Reply Rules:**
+    *   Tạo thành công migration và model cho `ScheduledPost` và `AutoReplyRule` kèm theo các quan hệ và casts Eloquent.
+    *   Xây dựng đầy đủ các API CRUD bảo mật trong middleware `auth:sanctum` cho cả Scheduled Posts và Auto-Reply Rules.
+    *   Viết command `PublishScheduledPosts` (`php artisan posts:publish`) hỗ trợ tự động đăng trạng thái hoặc ảnh đính kèm lên Graph API của nhiều Fanpage song song.
+    *   Đăng ký cron job chạy command `posts:publish` mỗi phút trong `routes/console.php`.
+    *   Tích hợp bộ đối khớp từ khóa thông minh (keyword containment) trực tiếp vào webhook handler `ProcessFacebookWebhookJob` để phản hồi tức thì cho cả bình luận và tin nhắn Messenger, tự lưu tương tác và phát Echo socket cập nhật UI Live Chat.
+    *   Thiết kế giao diện soạn thảo Scheduler Next.js `/scheduler` dạng Split Pane có Facebook mockup preview thời gian thực và danh sách bài đăng lịch sử.
+    *   Thiết kế giao diện quản lý rules Next.js `/rules` sử dụng layout Cards tinh gọn, badges từ khóa màu sắc, nút Switch Toggle trạng thái hoạt động tức thì với micro-animations và modal CRUD.
+    *   Xác thực biên dịch build Next.js thành công 100% không phát sinh lỗi typescript, và viết feature test **[AutomationTest.php](file:///d:/ThucTapDN/Zeflyo/backend/tests/Feature/AutomationTest.php)** chạy thành công trên PHPUnit/Docker.
 
 ## 🧠 Semantic Context Essence (Tinh túy kiến thức & Quyết định thiết kế)
-*   *Laravel Octane Worker Cache:* Khi thêm route mới hoặc thay đổi file config, cần chạy `route:clear`, `config:clear`, và `octane:reload` để Octane xóa bộ nhớ RAM cũ và nạp code mới.
-*   *Database Column Limits:* Kiểu dữ liệu `access_token` và `avatar_url` của Facebook Fanpage bắt buộc phải dùng `TEXT` do token mã hóa Laravel Sanctum và link ảnh CDN Facebook rất dài.
-*   *Dev Login (Bypass HTTPS):* Cung cấp nút Dev Login chạy trực tiếp trên cổng HTTP (`localhost:3000`) mà không cần HTTPS Facebook Login.
+*   *Fallback Mock Token:* Khi sử dụng `mock_page_token_123` làm access token cho các fanpage, backend sẽ bỏ qua việc gọi API Facebook thật để tránh lỗi xác thực token, thay vào đó giả lập thành công trong nhật ký log của container.
+*   *Instant State Toggle:* Để tăng trải nghiệm cao cấp, switch toggle trên giao diện `/rules` thực hiện cập nhật tức thời trên React state và gửi request ngầm cập nhật database, tự động revert state nếu request backend thất bại.
+*   *Explicit Nullable types:* Tránh các cảnh báo deprecation trên PHP 8.4 bằng cách khai báo rõ ràng các tham số tùy chọn nullable dạng `?string $postId = null`.
 
 ## 🔜 Next Steps (3 hành động kỹ thuật trực tiếp kế tiếp)
-- [ ] **Step 1:** Thiết lập API Key Google Gemini 1.5 Flash trong file `.env` và file cấu hình `config/services.php`.
-- [ ] **Step 2:** Viết lớp `GeminiService` gọi API Google AI Studio để phân tích và sinh câu trả lời tự động.
-- [ ] **Step 3:** Thiết kế màn hình CRUD Keyword Rules và tích hợp logic tự động phản hồi vào `ProcessFacebookWebhookJob` (Phase 4).
+- [ ] **Step 1:** Thiết lập API Key Google Gemini 1.5 Flash trong file cấu hình `.env` và `config/services.php`.
+- [ ] **Step 2:** Viết lớp `GeminiService` để phân tích ngữ cảnh và trả lời tự động cho khách hàng khi không khớp từ khóa cố định nào.
+- [ ] **Step 3:** Tiến hành review bảo mật toàn diện (Security Review) và mã hóa các access token trong database.

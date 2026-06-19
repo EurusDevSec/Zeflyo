@@ -39,4 +39,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Fanpage::class);
     }
+
+    /**
+     * Get the scheduled posts created by this user.
+     */
+    public function scheduledPosts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ScheduledPost::class);
+    }
 }

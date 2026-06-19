@@ -18,7 +18,8 @@ import {
   ExternalLink,
   ChevronRight,
   Database,
-  MessageSquare
+  MessageSquare,
+  Calendar
 } from "lucide-react";
 
 // Inline Facebook SVG Icon (since Lucide removed brand icons)
@@ -190,6 +191,7 @@ export default function App() {
 
     setLoading(true);
     (window as any).FB.login(function(response: any) {
+      console.log("FB.login response:", response);
       if (response.authResponse) {
         const userAccessToken = response.authResponse.accessToken;
         sendTokenToBackend(userAccessToken);
@@ -435,9 +437,23 @@ export default function App() {
           </span>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {user && (
             <>
+              <a 
+                href="/scheduler"
+                className="flex items-center gap-2 py-1.5 px-3.5 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300 rounded-full text-xs sm:text-sm font-semibold transition-all border border-zinc-850 active:scale-95 cursor-pointer"
+              >
+                <Calendar className="w-4 h-4 text-blue-400" />
+                <span className="hidden md:inline">Scheduler</span>
+              </a>
+              <a 
+                href="/rules"
+                className="flex items-center gap-2 py-1.5 px-3.5 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300 rounded-full text-xs sm:text-sm font-semibold transition-all border border-zinc-850 active:scale-95 cursor-pointer"
+              >
+                <Sliders className="w-4 h-4 text-indigo-400" />
+                <span className="hidden md:inline">Auto-Reply Rules</span>
+              </a>
               <a 
                 href="/chat"
                 className="flex items-center gap-2 py-1.5 px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-xs sm:text-sm font-semibold transition-all border border-blue-500/20 shadow-lg shadow-blue-500/10 active:scale-95 cursor-pointer"

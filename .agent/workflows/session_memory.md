@@ -1,5 +1,5 @@
 # 💾 SESSION MEMORY — Zeflyo Project
-> Last Checkpoint: 2026-06-19 | Status: Phase 3 (Chat Hub Refactored) & Phase 4 (Scheduler & Rules) — 100% COMPLETE
+> Last Checkpoint: 2026-06-19 | Status: Phase 3 (Chat Hub Refactored), Phase 4 (Scheduler & Rules), Multilingual Support — 100% COMPLETE
 
 ---
 
@@ -23,6 +23,11 @@
     *   Nâng cấp cơ chế Responsive: Tự động ẩn cột 3 ở màn hình di động, hiển thị cột 1 (sidebar) và cột 2 (khung chat) dưới dạng trượt slide kèm nút Back quay lại danh sách cuộc trò chuyện.
     *   Bổ sung hiệu ứng viền trái nổi bật (`border-blue-600`) cho đoạn hội thoại đang chọn và chấm tròn thông báo tin nhắn chưa đọc nhấp nháy cam (`animate-pulse shadow-orange-500/20`).
     *   Refine trạng thái kết nối WebSocket Indicator trên Header bằng hiệu ứng màu sắc và glow tương ứng.
+
+*   **[Phase 1] Multilingual & UX Improvements:**
+    *   Tích hợp bộ chuyển đổi ngôn ngữ **Anh / Việt (Language Switcher)** ở góc tiêu đề của Trang chủ (`page.tsx`) giúp chuyển đổi toàn bộ nhãn từ tiếng Anh sang tiếng Việt cực kỳ mượt mà.
+    *   Đồng bộ lựa chọn ngôn ngữ xuống `localStorage` để giữ nguyên trạng thái khi người dùng tải lại trang.
+    *   Tắt các thông báo lỗi Hydration phiền toái bằng thuộc tính `suppressHydrationWarning` trên thẻ `<body>` trong `layout.tsx` (khắc phục việc các extensions tự ý thay đổi DOM trước khi hydrate).
 
 ## 🧠 Semantic Context Essence (Tinh túy kiến thức & Quyết định thiết kế)
 *   *Fallback Mock Token:* Khi sử dụng `mock_page_token_123` làm access token cho các fanpage, backend sẽ bỏ qua việc gọi API Facebook thật để tránh lỗi xác thực token, thay vào đó giả lập thành công trong nhật ký log của container.

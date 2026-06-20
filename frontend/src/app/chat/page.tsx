@@ -14,7 +14,17 @@ import {
   Loader2,
   Shield,
   MessageSquare,
-  AlertCircle
+  AlertCircle,
+  Sun,
+  Moon,
+  Home,
+  Calendar,
+  Sliders,
+  Globe,
+  LogOut,
+  ChevronDown,
+  ChevronRight,
+  HelpCircle
 } from "lucide-react";
 import { getEchoInstance } from "@/lib/echo";
 
@@ -43,6 +53,7 @@ interface Conversation {
     created_at: string;
     is_from_customer: boolean;
   } | null;
+  unread?: boolean;
 }
 
 interface Fanpage {
@@ -54,18 +65,99 @@ interface Fanpage {
   is_active: boolean;
 }
 
+// React.memo Message Bubble to avoid redundant re-renders on large history sets
+const MessageBubble = React.memo(function MessageBubble({ msg }: { msg: Interaction }) {
+  const isCustomer = msg.is_from_customer;
+  const isAi = msg.content.includes("🤖") || msg.fb_item_id.includes(".ai.") || msg.fb_item_id.startsWith("auto_reply");
+  
+  return (
+    <div className={`flex ${isCustomer ? "justify-start" : "justify-end"} transition-all duration-200`}>
+      <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed border transition-all ${
+        isCustomer 
+          ? "bg-zinc-900 border-zinc-800 text-zinc-100" 
+          : isAi
+            ? "bg-amber-500/10 border-amber-500/20 text-amber-200"
+            : "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/10"
+      }`}>
+        <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+        <span className={`block text-[10px] mt-1 text-right font-medium ${
+          isCustomer ? "text-zinc-500" : "text-blue-200"
+        }`}>
+          {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </span>
+      </div>
+    </div>
+  );
+});
+
+// Premium Glassmorphic Skeleton Loader for messages
+const MessageSkeleton = () => (
+  <div className="space-y-4 animate-pulse">
+    <div className="flex justify-start">
+      <div className="bg-zinc-900/40 border border-zinc-800/40 rounded-2xl p-4 w-[60%] h-12" />
+    </div>
+    <div className="flex justify-end">
+      <div className="bg-zinc-800/20 border border-zinc-700/20 rounded-2xl p-4 w-[45%] h-10" />
+    </div>
+    <div className="flex justify-start">
+      <div className="bg-zinc-900/40 border border-zinc-800/40 rounded-2xl p-4 w-[75%] h-16" />
+    </div>
+    <div className="flex justify-end">
+      <div className="bg-zinc-800/20 border border-zinc-700/20 rounded-2xl p-4 w-[50%] h-12" />
+    </div>
+  </div>
+);
+
 export default function ChatHub() {
   const [token, setToken] = useState<string | null>(null);
   const [apiBaseUrl, setApiBaseUrl] = useState<string>("http://localhost");
   const [activeFanpage, setActiveFanpage] = useState<Fanpage | null>(null);
   const [fanpages, setFanpages] = useState<Fanpage[]>([]);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  
+  interface UserProfile {
+    id: number;
+    name: string;
+    email: string;
+    avatar: string | null;
+  }
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [lang, setLang] = useState<"en" | "vi">("vi");
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    localStorage.setItem("zeflyo_theme", nextTheme);
+    if (nextTheme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  };
+
+  const toggleLanguage = () => {
+    const nextLang = lang === "en" ? "vi" : "en";
+    setLang(nextLang);
+    localStorage.setItem("zeflyo_lang", nextLang);
+    document.documentElement.lang = nextLang;
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("zeflyo_token");
+    localStorage.removeItem("zeflyo_user");
+    localStorage.removeItem("zeflyo_mock_pages");
+    window.location.href = "/";
+  };
   
   // Chat state
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Interaction[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>(" ");
   const [inputText, setInputText] = useState<string>("");
+  
+  // Mobile sliding states
+  const [mobileView, setMobileView] = useState<"list" | "chat">("list");
   
   // Loading & statuses
   const [loadingConvs, setLoadingConvs] = useState<boolean>(true);
@@ -80,8 +172,8 @@ export default function ChatHub() {
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [simSuccess, setSimSuccess] = useState<boolean>(false);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const echoRef = useRef<any>(null);
   const activeChannelRef = useRef<any>(null);
 
@@ -90,22 +182,70 @@ export default function ChatHub() {
     const savedToken = localStorage.getItem("zeflyo_token");
     const savedApiBase = localStorage.getItem("zeflyo_api_base");
     const savedPages = localStorage.getItem("zeflyo_mock_pages");
+    const savedTheme = localStorage.getItem("zeflyo_theme") || "dark";
+    const savedUser = localStorage.getItem("zeflyo_user");
+    const savedLang = localStorage.getItem("zeflyo_lang");
 
-    if (savedToken) setToken(savedToken);
+    if (!savedToken) {
+      // Redirect to login if not authenticated
+      window.location.href = "/";
+      return;
+    }
+
+    setToken(savedToken);
     if (savedApiBase) setApiBaseUrl(savedApiBase);
+    if (savedUser) setUser(JSON.parse(savedUser));
+    if (savedLang === "en" || savedLang === "vi") setLang(savedLang as "en" | "vi");
+
+    setTheme(savedTheme as "dark" | "light");
+    if (savedTheme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
 
     // Try to load connected pages to select active one
+    let loadedPages = false;
     if (savedPages) {
       try {
         const pages: Fanpage[] = JSON.parse(savedPages);
         setFanpages(pages);
         if (pages.length > 0) {
           setActiveFanpage(pages[0]);
+          loadedPages = true;
         }
       } catch (e) {
         console.error("Failed to parse pages", e);
       }
     }
+
+    // Fallback seed mock pages if in Mock Mode but pages are missing
+    if (savedToken.startsWith("mock_") && !loadedPages) {
+      const mockPages: Fanpage[] = [
+        {
+          id: 1,
+          user_id: 99,
+          fb_page_id: "109849204982312",
+          name: "Zeflyo Fashion Store",
+          avatar_url: null,
+          is_active: true,
+        },
+        {
+          id: 2,
+          user_id: 99,
+          fb_page_id: "304958230495823",
+          name: "Zeflyo Food & Beverage",
+          avatar_url: null,
+          is_active: false,
+        }
+      ];
+      setFanpages(mockPages);
+      setActiveFanpage(mockPages[0]);
+      localStorage.setItem("zeflyo_mock_pages", JSON.stringify(mockPages));
+    }
+    
+    // Clear initial space query
+    setSearchQuery("");
   }, []);
 
   // 2. Fetch real pages if token is valid (non-mock)
@@ -140,17 +280,24 @@ export default function ChatHub() {
     }
   }, [selectedConv]);
 
-  // 5. Auto-scroll to bottom of chat
+  // 5. Auto-scroll to bottom of chat on new messages
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // 6. Polling fallback: every 5s refresh conversations & active messages (for real mode)
+  // 6. Textarea auto-resize logic
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+    }
+  }, [inputText]);
+
+  // 7. Polling fallback: every 5s refresh conversations & active messages (for real mode)
   useEffect(() => {
     if (!token || token.startsWith("mock_") || !activeFanpage) return;
 
     const pollInterval = setInterval(async () => {
-      // Silently refresh conversations list
       try {
         const res = await fetch(`${apiBaseUrl}/api/conversations?fanpage_id=${activeFanpage.id}`, {
           headers: { "Accept": "application/json", "Authorization": `Bearer ${token}` }
@@ -158,12 +305,16 @@ export default function ChatHub() {
         if (res.ok) {
           const data: Conversation[] = await res.json();
           setConversations(prev => {
-            // Merge: keep existing ones, add new ones, update last_interaction
             const merged = [...prev];
             data.forEach(incoming => {
               const idx = merged.findIndex(c => c.customer_id === incoming.customer_id);
               if (idx >= 0) {
-                merged[idx] = { ...merged[idx], last_interaction: incoming.last_interaction };
+                // Preserving local unread flag if state was updated
+                merged[idx] = { 
+                  ...merged[idx], 
+                  last_interaction: incoming.last_interaction,
+                  unread: merged[idx].unread || incoming.unread 
+                };
               } else {
                 merged.push(incoming);
               }
@@ -174,10 +325,6 @@ export default function ChatHub() {
               return bT - aT;
             });
           });
-          // Auto-select first if nothing selected
-          if (data.length > 0) {
-            setSelectedConv(prev => prev ?? data[0]);
-          }
         }
       } catch (_) { /* silent fail */ }
     }, 5000);
@@ -185,7 +332,7 @@ export default function ChatHub() {
     return () => clearInterval(pollInterval);
   }, [token, activeFanpage, apiBaseUrl]);
 
-  // 7. Polling for active conversation messages
+  // 8. Polling for active conversation messages
   useEffect(() => {
     if (!token || token.startsWith("mock_") || !selectedConv) return;
 
@@ -220,8 +367,6 @@ export default function ChatHub() {
           });
         }
       }, 50);
-    } else {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -238,13 +383,17 @@ export default function ChatHub() {
         const pages = data.fanpages || [];
         setFanpages(pages);
         if (pages.length > 0) {
-          // Select page 1028776643660761 (Zeflyo Shop) if present, otherwise default to first
           const targetPage = pages.find((p: Fanpage) => p.fb_page_id === "1028776643660761") || pages[0];
           setActiveFanpage(targetPage);
+        } else {
+          setLoadingConvs(false);
         }
+      } else {
+        setLoadingConvs(false);
       }
     } catch (err) {
       console.error("Failed to fetch real fanpages", err);
+      setLoadingConvs(false);
     }
   };
 
@@ -269,11 +418,12 @@ export default function ChatHub() {
               content: "Hello! Is this store open?",
               created_at: new Date().toISOString(),
               is_from_customer: true
-            }
+            },
+            unread: false
           }
         ];
         setConversations(mockConvs);
-        setSelectedConv(mockConvs[0]); // Auto-select first conversation
+        setSelectedConv(mockConvs[0]);
         setLoadingConvs(false);
       }, 500);
       return;
@@ -288,9 +438,10 @@ export default function ChatHub() {
       });
       if (response.ok) {
         const data = await response.json();
-        setConversations(data);
-        if (data.length > 0 && !selectedConv) {
-          setSelectedConv(data[0]); // Auto-select first conversation
+        const formattedConvs = data.map((c: Conversation) => ({ ...c, unread: false }));
+        setConversations(formattedConvs);
+        if (formattedConvs.length > 0 && !selectedConv) {
+          setSelectedConv(formattedConvs[0]);
         }
       } else {
         setErrorMsg("Failed to load conversations.");
@@ -337,7 +488,6 @@ export default function ChatHub() {
       });
       if (response.ok) {
         const data = await response.json();
-        // Laravel paginate response returns items inside 'data' key
         setMessages(data.data || []);
       }
     } catch (err) {
@@ -347,10 +497,10 @@ export default function ChatHub() {
     }
   };
 
-  // 6. WebSocket / Echo Client Init
+  // WebSocket / Echo Client Init
   const initWebSocket = (pageId: number) => {
     if (!token || token.startsWith("mock_")) {
-      setWsStatus("connected"); // Simulate connection in mock mode
+      setWsStatus("connected");
       return;
     }
 
@@ -382,7 +532,7 @@ export default function ChatHub() {
       const channel = echo.private(`fanpage.${pageId}`);
       activeChannelRef.current = channel;
 
-      // Listen to incoming messages
+      // Listen to incoming messages from customers
       channel.listen("MessageReceived", (event: any) => {
         console.log("MessageReceived event caught:", event);
         handleIncomingEvent(event);
@@ -407,7 +557,6 @@ export default function ChatHub() {
     // 1. Update active chat messages timeline in real-time
     if (selectedConv && selectedConv.customer_id === interaction.customer_id) {
       setMessages((prev) => {
-        // Prevent duplicate messages if already rendered
         if (prev.some((msg) => msg.fb_item_id === interaction.fb_item_id)) {
           return prev;
         }
@@ -420,9 +569,9 @@ export default function ChatHub() {
       const exists = prev.some((c) => c.customer_id === interaction.customer_id);
       
       if (exists) {
-        // Update existing item and bubble to top
         return prev.map((c) => {
           if (c.customer_id === interaction.customer_id) {
+            const isCurrentlySelected = selectedConv?.customer_id === interaction.customer_id;
             return {
               ...c,
               last_interaction: {
@@ -430,7 +579,8 @@ export default function ChatHub() {
                 content: interaction.content,
                 created_at: interaction.created_at,
                 is_from_customer: interaction.is_from_customer
-              }
+              },
+              unread: isCurrentlySelected ? false : (interaction.is_from_customer ? true : c.unread)
             };
           }
           return c;
@@ -440,7 +590,6 @@ export default function ChatHub() {
           return bTime - aTime;
         });
       } else {
-        // Insert new conversation from new customer
         const newConv: Conversation = {
           customer_id: customer.id,
           customer_name: customer.name || "Facebook User",
@@ -453,18 +602,32 @@ export default function ChatHub() {
             content: interaction.content,
             created_at: interaction.created_at,
             is_from_customer: interaction.is_from_customer
-          }
+          },
+          unread: selectedConv?.customer_id === customer.id ? false : interaction.is_from_customer
         };
         return [newConv, ...prev];
       }
     });
   };
 
-  // 7. Send Response API
+  // Select conversation safely, clearing its unread status
+  const handleSelectConversation = (conv: Conversation) => {
+    setSelectedConv(conv);
+    setMobileView("chat");
+    
+    // Clear unread indicator
+    setConversations(prev => 
+      prev.map(c => c.customer_id === conv.customer_id ? { ...c, unread: false } : c)
+    );
+  };
+
+  // Send Response API
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim() || !selectedConv || sendingMessage) return;
 
+    const messageText = inputText;
+    setInputText("");
     setSendingMessage(true);
 
     // Mock Mode fallback
@@ -476,13 +639,12 @@ export default function ChatHub() {
         type: "message",
         fb_item_id: `mock.outbound.${Date.now()}`,
         fb_post_id: null,
-        content: inputText,
+        content: messageText,
         is_from_customer: false,
         created_at: new Date().toISOString()
       };
       setMessages((prev) => [...prev, newMsg]);
       
-      // Update sidebar
       setConversations((prev) => 
         prev.map((c) => {
           if (c.customer_id === selectedConv.customer_id) {
@@ -490,7 +652,7 @@ export default function ChatHub() {
               ...c,
               last_interaction: {
                 type: "message",
-                content: inputText,
+                content: messageText,
                 created_at: new Date().toISOString(),
                 is_from_customer: false
               }
@@ -500,10 +662,9 @@ export default function ChatHub() {
         })
       );
 
-      setInputText("");
       setSendingMessage(false);
       
-      // Simulate AI Autoreply after 3s if AI is active
+      // Simulate AI Autoreply after 2s if AI is active
       if (selectedConv.ai_active) {
         setTimeout(() => {
           const aiMsg: Interaction = {
@@ -531,17 +692,14 @@ export default function ChatHub() {
           "Accept": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ content: inputText })
+        body: JSON.stringify({ content: messageText })
       });
 
       if (response.ok) {
         const data = await response.json();
         const interaction: Interaction = data.interaction;
-        
-        // Append locally
         setMessages((prev) => [...prev, interaction]);
         
-        // Update list
         setConversations((prev) => 
           prev.map((c) => {
             if (c.customer_id === selectedConv.customer_id) {
@@ -558,8 +716,6 @@ export default function ChatHub() {
             return c;
           })
         );
-        
-        setInputText("");
       } else {
         alert("Failed to send message.");
       }
@@ -571,7 +727,7 @@ export default function ChatHub() {
     }
   };
 
-  // 8. Toggle customer AI status
+  // Toggle customer AI status
   const handleToggleAi = async () => {
     if (!selectedConv || togglingAi) return;
 
@@ -614,13 +770,12 @@ export default function ChatHub() {
     }
   };
 
-  // 9. Simulation Helper for Local Webhook Testing
+  // Simulation Helper for Local Webhook Testing
   const handleSimulateWebhookMessage = async () => {
     if (isSimulating || !activeFanpage || !simMessage.trim()) return;
     setIsSimulating(true);
     setSimSuccess(false);
 
-    // ── MOCK MODE: simulate 100% locally, no backend needed ──────────────
     if (token && token.startsWith("mock_")) {
       const mockInteraction: Interaction = {
         id: Date.now(),
@@ -642,7 +797,6 @@ export default function ChatHub() {
       return;
     }
 
-    // ── REAL MODE: POST actual webhook payload to backend ─────────────────
     try {
       const webhookPayload = {
         object: "page",
@@ -686,56 +840,193 @@ export default function ChatHub() {
     }
   };
 
-
   const filteredConversations = conversations.filter((c) => 
     c.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.last_interaction?.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-[#f4f4f5] flex flex-col relative overflow-hidden font-sans">
+    <div className="min-h-screen animated-gradient text-[#f4f4f5] flex relative overflow-hidden font-sans">
       
       {/* Dynamic Background Glowing Blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/10 blur-[120px] animate-pulse-glow" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 blur-[120px] animate-pulse-glow" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 blur-[120px] pointer-events-none animate-pulse-glow-delayed" />
 
-      {/* Header */}
-      <header className="glass-panel w-full border-b border-white/5 px-6 py-4 flex items-center justify-between z-10">
-        <div className="flex items-center gap-4">
-          <a 
-            href="/"
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </a>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-blue-500" />
-              Live Chat Hub
-            </h1>
-            <p className="text-xs text-[#a1a1aa] mt-0.5">Quản lý tin nhắn đa kênh thời gian thực</p>
+      {/* Sidebar Navigation */}
+      <aside className="hidden lg:flex w-72 bg-[#18181b] border-r border-zinc-800 flex-col relative z-20 transition-all duration-300">
+        {/* Sidebar Header / Logo */}
+        <div className="p-6 border-b border-zinc-850 flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <span className="font-extrabold text-white text-base">Z</span>
           </div>
+          <span className="text-lg font-bold tracking-wider bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent logo-text">
+            ZEFLYO
+          </span>
         </div>
 
-        {/* WebSocket connection status indicator */}
-        <div className="flex items-center gap-4">
-          {activeFanpage && (
-            <div className="flex items-center gap-2 bg-white/5 border border-white/5 rounded-xl px-3 py-1.5 text-sm">
-              <span className="font-medium text-[#f4f4f5]">{activeFanpage.name}</span>
-              <span className="text-xs text-[#a1a1aa]">({activeFanpage.fb_page_id})</span>
+        {/* User Stats Card */}
+        <div className="p-4 mx-4 mt-6 bg-[#09090b]/40 rounded-2xl border border-green-500/20 text-center flex flex-col gap-1 shadow-inner">
+          <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Tổng điểm</span>
+          <span className="text-3xl font-extrabold text-emerald-400">200</span>
+        </div>
+
+        {/* Sidebar Navigation Menu */}
+        <nav className="flex-1 px-4 py-6 overflow-y-auto flex flex-col gap-3 custom-scrollbar">
+          {/* Trang chủ */}
+          <a
+            href="/"
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
+          >
+            <Home className="w-4 h-4 text-zinc-500" />
+            <span>Trang chủ</span>
+          </a>
+
+          {/* Lên lịch đăng bài */}
+          <a
+            href="/scheduler"
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
+          >
+            <Calendar className="w-4 h-4 text-zinc-500" />
+            <span>Lên lịch đăng bài</span>
+          </a>
+
+          {/* Hộp thư tập trung (Active) */}
+          <a
+            href="/chat"
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl bg-zinc-900 text-zinc-200 transition-all text-xs font-bold uppercase tracking-wider shadow-sm"
+          >
+            <MessageSquare className="w-4 h-4 text-blue-500" />
+            <span>Hộp thư tập trung</span>
+          </a>
+
+          {/* Luật Auto-reply */}
+          <a
+            href="/rules"
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
+          >
+            <Sliders className="w-4 h-4 text-zinc-500" />
+            <span>Luật Auto-Reply</span>
+          </a>
+        </nav>
+
+        {/* Sidebar Footer with user info & toggles */}
+        <div className="p-4 border-t border-zinc-850 flex flex-col gap-4">
+          {/* User profile row */}
+          {user && (
+            <div className="flex items-center justify-between bg-zinc-950/40 border border-zinc-850/50 p-2.5 rounded-xl">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-xs font-semibold text-blue-450 flex-shrink-0">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    user.name.charAt(0)
+                  )}
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs text-zinc-200 font-bold truncate block">{user.name}</span>
+                  <span className="text-[10px] text-zinc-500 truncate block">{user.email || "user@zeflyo.io"}</span>
+                </div>
+              </div>
+              <button 
+                onClick={handleLogout}
+                className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer flex-shrink-0"
+                title="Đăng xuất"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
             </div>
           )}
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 text-xs">
-            <span className={`w-2.5 h-2.5 rounded-full ${
-              wsStatus === "connected" ? "bg-green-500 shadow-[0_0_8px_#22c55e]" :
-              wsStatus === "connecting" ? "bg-yellow-500 animate-pulse" :
-              "bg-red-500"
+          {/* Utility actions */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-full text-xs font-semibold transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
+              title="Switch Language / Đổi ngôn ngữ"
+            >
+              <Globe className="w-3.5 h-3.5 text-blue-455" />
+              <span>{lang === "en" ? "EN" : "VI"}</span>
+            </button>
+            
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center w-8 h-8 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-full transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content Workspace */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-hidden relative z-10">
+        
+        {/* Mobile Header */}
+        <header className="w-full bg-[#18181b]/50 border-b border-zinc-800 px-6 py-4 flex items-center justify-between lg:hidden z-20">
+          <div className="flex items-center gap-3">
+            <a href="/" className="p-2 rounded-xl bg-zinc-900 border border-zinc-805 text-zinc-400">
+              <ArrowLeft className="w-4 h-4" />
+            </a>
+            <span className="font-bold text-sm tracking-wider bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent logo-text">ZEFLYO</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center w-8 h-8 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl"
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="p-2 text-zinc-450 hover:text-red-400 cursor-pointer"
+              title="Đăng xuất"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </header>
+
+        {/* Header */}
+        <header className="glass-panel w-full border-b border-white/5 px-6 py-4 flex items-center justify-between z-10">
+          <div className="flex items-center gap-4">
+            <div>
+              <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-blue-500" />
+                Live Chat Hub
+              </h1>
+              <p className="text-xs text-[#a1a1aa] mt-0.5">Quản lý tin nhắn đa kênh thời gian thực</p>
+            </div>
+          </div>
+
+        {/* WebSocket connection status indicator */}
+        <div className="flex items-center gap-4">
+          {/* Theme Switcher */}
+          <button
+            onClick={toggleTheme}
+            className="flex items-center justify-center w-9 h-9 bg-white/5 hover:bg-white/10 text-zinc-300 rounded-xl transition-all border border-white/5 cursor-pointer active:scale-95 shadow-sm"
+            title="Toggle Light/Dark theme"
+          >
+            {theme === "dark" ? <Sun className="w-4.5 h-4.5 text-amber-400" /> : <Moon className="w-4.5 h-4.5 text-indigo-400" />}
+          </button>
+
+          {activeFanpage && (
+            <div className="flex items-center gap-2 bg-white/5 border border-white/5 rounded-xl px-3 py-1.5 text-sm">
+              <span className="font-medium text-[#f4f4f5]">{activeFanpage.name}</span>
+              <span className="text-xs text-[#a1a1aa] hidden sm:inline">({activeFanpage.fb_page_id})</span>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 text-xs shadow-inner">
+            <span className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px] transition-all duration-350 ${
+              wsStatus === "connected" ? "bg-green-500 shadow-green-500/50" :
+              wsStatus === "connecting" ? "bg-yellow-500 animate-pulse shadow-yellow-500/50" :
+              "bg-red-500 shadow-red-500/50"
             }`} />
-            <span className="font-medium">
-              {wsStatus === "connected" ? "Connected" :
-               wsStatus === "connecting" ? "Connecting..." :
-               "Disconnected"}
+            <span className="font-semibold text-zinc-350">
+              {wsStatus === "connected" ? "Đã kết nối" :
+               wsStatus === "connecting" ? "Đang kết nối..." :
+               "Mất kết nối"}
             </span>
           </div>
         </div>
@@ -745,7 +1036,9 @@ export default function ChatHub() {
       <main className="flex-1 w-full max-w-[1600px] mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-12 gap-6 z-10 overflow-hidden">
         
         {/* Column 1: Sidebar (Conversations List) */}
-        <section className="glass-panel md:col-span-4 rounded-3xl overflow-hidden flex flex-col h-[calc(100vh-140px)] border border-white/5">
+        <section className={`glass-panel rounded-3xl overflow-hidden flex flex-col h-[calc(100vh-140px)] border border-white/5 transition-all duration-300 md:col-span-4 lg:col-span-4 ${
+          mobileView === "chat" ? "hidden md:flex" : "flex"
+        }`}>
           <div className="p-4 border-b border-white/5 flex flex-col gap-3">
             
             {/* Search Input */}
@@ -756,7 +1049,7 @@ export default function ChatHub() {
                 placeholder="Tìm khách hàng hoặc nội dung..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/5 border border-white/5 rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 text-[#f4f4f5] placeholder-[#a1a1aa] transition-all"
+                className="w-full bg-white/5 border border-white/5 focus:border-blue-500/40 rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/20 text-[#f4f4f5] placeholder-[#a1a1aa] transition-all"
               />
             </div>
 
@@ -771,7 +1064,7 @@ export default function ChatHub() {
                     setSelectedConv(null);
                   }
                 }}
-                className="w-full bg-white/5 border border-white/5 rounded-xl px-3 py-2 text-sm text-[#f4f4f5] focus:outline-none"
+                className="w-full bg-white/5 border border-white/5 rounded-xl px-3 py-2 text-sm text-[#f4f4f5] focus:outline-none cursor-pointer"
               >
                 {fanpages.map((p) => (
                   <option key={p.id} value={p.id} className="bg-zinc-950">{p.name}</option>
@@ -781,8 +1074,24 @@ export default function ChatHub() {
           </div>
 
           {/* Conversations List */}
-          <div className="flex-1 overflow-y-auto divide-y divide-white/5">
-            {loadingConvs ? (
+          <div className="flex-1 overflow-y-auto divide-y divide-white/5 custom-scrollbar">
+            {!activeFanpage ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center px-5 gap-3">
+                <div className="w-10 h-10 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500">
+                  <AlertCircle className="w-5 h-5" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-bold text-zinc-300">Không tìm thấy Fanpage hoạt động</span>
+                  <p className="text-[10px] text-zinc-500 leading-normal mt-1">
+                    Hãy đảm bảo:
+                  </p>
+                  <ul className="text-[10px] text-zinc-500 text-left list-disc pl-4 mt-1 space-y-1">
+                    <li>Địa chỉ Backend API là HTTPS (ở Trang chủ).</li>
+                    <li>Đăng nhập thành công và có ít nhất 1 Fanpage kết nối.</li>
+                  </ul>
+                </div>
+              </div>
+            ) : loadingConvs ? (
               <div className="flex flex-col items-center justify-center py-20 text-[#a1a1aa] gap-3">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
                 <span className="text-sm">Đang tải cuộc hội thoại...</span>
@@ -791,21 +1100,22 @@ export default function ChatHub() {
               <div className="flex flex-col items-center justify-center py-20 text-[#a1a1aa] px-4 text-center">
                 <MessageSquare className="w-10 h-10 text-white/10 mb-3" />
                 <span className="text-sm">Không tìm thấy cuộc hội thoại nào</span>
+                <span className="text-[10px] text-zinc-500 mt-2 block">Hãy gửi tin nhắn giả lập bên phải để bắt đầu cuộc hội thoại.</span>
               </div>
             ) : (
               filteredConversations.map((c) => {
                 const isSelected = selectedConv?.customer_id === c.customer_id;
                 const lastMsg = c.last_interaction;
-                const unread = lastMsg && lastMsg.is_from_customer;
+                const hasUnread = c.unread;
 
                 return (
                   <div 
                     key={c.customer_id}
-                    onClick={() => setSelectedConv(c)}
-                    className={`p-4 flex items-center gap-3 cursor-pointer transition-all ${
+                    onClick={() => handleSelectConversation(c)}
+                    className={`p-4 flex items-center gap-3 cursor-pointer transition-all border-l-4 ${
                       isSelected 
-                        ? "bg-white/5 border-l-4 border-blue-500" 
-                        : "hover:bg-white/[0.02] border-l-4 border-transparent"
+                        ? "bg-white/5 border-blue-600 text-white" 
+                        : "hover:bg-white/[0.02] border-transparent text-zinc-300"
                     }`}
                   >
                     {/* Avatar */}
@@ -822,25 +1132,25 @@ export default function ChatHub() {
                         </div>
                       )}
                       
-                      {/* Pulse notification badge if unread */}
-                      {unread && (
-                        <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-orange-500 rounded-full border-2 border-[#09090b] animate-pulse" />
+                      {/* Pulsing notification badge if unread */}
+                      {hasUnread && (
+                        <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-orange-500 rounded-full border-2 border-[#09090b] shadow-[0_0_8px_#f97316] animate-pulse" />
                       )}
                     </div>
 
                     {/* Metadata */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <span className={`font-semibold truncate text-sm ${unread ? "text-white" : "text-[#e4e4e7]"}`}>
+                        <span className={`font-semibold truncate text-sm ${hasUnread ? "text-white font-bold" : "text-[#e4e4e7]"}`}>
                           {c.customer_name}
                         </span>
                         {lastMsg && (
-                          <span className="text-[10px] text-[#a1a1aa] whitespace-nowrap">
+                          <span className="text-[10px] text-zinc-500 whitespace-nowrap">
                             {new Date(lastMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         )}
                       </div>
-                      <p className={`text-xs truncate ${unread ? "text-white font-medium" : "text-[#a1a1aa]"}`}>
+                      <p className={`text-xs truncate ${hasUnread ? "text-orange-400 font-medium" : "text-zinc-400"}`}>
                         {lastMsg ? lastMsg.content : "Chưa có cuộc hội thoại nào"}
                       </p>
                     </div>
@@ -852,79 +1162,72 @@ export default function ChatHub() {
         </section>
 
         {/* Column 2: Chat Area */}
-        <section className="glass-panel md:col-span-5 rounded-3xl overflow-hidden flex flex-col h-[calc(100vh-140px)] border border-white/5">
+        <section className={`glass-panel rounded-3xl overflow-hidden flex flex-col h-[calc(100vh-140px)] border border-white/5 transition-all duration-300 md:col-span-8 lg:col-span-5 ${
+          mobileView === "list" ? "hidden md:flex" : "flex"
+        }`}>
           {selectedConv ? (
             <>
               {/* Active Header */}
               <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
                 <div className="flex items-center gap-3">
+                  {/* Back button for mobile view */}
+                  <button 
+                    onClick={() => setMobileView("list")}
+                    className="md:hidden p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-zinc-400 hover:text-white cursor-pointer"
+                  >
+                    <ArrowLeft className="w-4.5 h-4.5" />
+                  </button>
+
                   <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-400 font-bold text-sm">
                     {selectedConv.customer_name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h2 className="text-sm font-semibold">{selectedConv.customer_name}</h2>
-                    <span className="text-[10px] text-[#a1a1aa] flex items-center gap-1">
-                      <span className={`w-1.5 h-1.5 rounded-full ${selectedConv.ai_active ? "bg-green-400 animate-pulse" : "bg-zinc-500"}`} />
-                      {selectedConv.ai_active ? "AI auto-reply active" : "AI auto-reply offline"}
+                    <h2 className="text-sm font-semibold text-zinc-200">{selectedConv.customer_name}</h2>
+                    <span className="text-[10px] text-zinc-550 flex items-center gap-1">
+                      <span className={`w-1.5 h-1.5 rounded-full ${selectedConv.ai_active ? "bg-green-400 animate-pulse" : "bg-zinc-650"}`} />
+                      {selectedConv.ai_active ? "Tự động phản hồi AI hoạt động" : "Tự động phản hồi AI đã tắt"}
                     </span>
                   </div>
                 </div>
               </div>
 
               {/* Message Timeline */}
-              <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                 {loadingMessages ? (
-                  <div className="flex items-center justify-center py-20 text-[#a1a1aa]">
-                    <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-                  </div>
+                  <MessageSkeleton />
                 ) : (
                   <>
-                    {messages.map((msg) => {
-                      const isCustomer = msg.is_from_customer;
-                      const isAi = msg.content.startsWith("🤖");
-                      
-                      return (
-                        <div 
-                          key={msg.id}
-                          className={`flex ${isCustomer ? "justify-start" : "justify-end"}`}
-                        >
-                          <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                            isCustomer 
-                              ? "bg-white/5 border border-white/5 text-[#f4f4f5]" 
-                              : isAi
-                                ? "bg-amber-500/10 border border-amber-500/20 text-amber-200"
-                                : "bg-blue-600 text-white shadow-lg shadow-blue-500/10"
-                          }`}>
-                            <p className="whitespace-pre-wrap">{msg.content}</p>
-                            <span className={`block text-[10px] mt-1 text-right ${
-                              isCustomer ? "text-[#a1a1aa]" : "text-white/70"
-                            }`}>
-                              {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div ref={messagesEndRef} />
+                    {messages.map((msg) => (
+                      <MessageBubble key={msg.id} msg={msg} />
+                    ))}
                   </>
                 )}
               </div>
 
               {/* Message Input Box */}
-              <form onSubmit={handleSendMessage} className="p-4 border-t border-white/5 bg-white/[0.01]">
-                <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    placeholder="Gõ phản hồi của bạn..."
+              <form onSubmit={handleSendMessage} className="p-4 border-t border-white/5 bg-zinc-950/40">
+                <div className="flex items-end gap-2 bg-zinc-950/80 border border-zinc-850 rounded-2xl p-2 focus-within:border-blue-500/40 transition-all">
+                  <textarea
+                    ref={textareaRef}
+                    rows={1}
+                    placeholder="Gõ phản hồi của bạn... (Enter để gửi, Shift+Enter xuống dòng)"
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        if (inputText.trim() && !sendingMessage) {
+                          handleSendMessage(e);
+                        }
+                      }
+                    }}
                     disabled={sendingMessage}
-                    className="flex-1 bg-white/5 border border-white/5 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 text-[#f4f4f5] placeholder-[#a1a1aa] transition-all"
+                    className="flex-1 bg-transparent text-sm text-[#f4f4f5] placeholder-zinc-500 outline-none resize-none p-2 max-h-32 custom-scrollbar"
                   />
                   <button 
                     type="submit"
                     disabled={!inputText.trim() || sendingMessage}
-                    className="p-3 rounded-2xl bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50 text-white flex items-center justify-center"
+                    className="p-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-lg shadow-blue-500/10 active:scale-95"
                   >
                     {sendingMessage ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -945,18 +1248,18 @@ export default function ChatHub() {
         </section>
 
         {/* Column 3: Customer Details & Toolings */}
-        <section className="glass-panel md:col-span-3 rounded-3xl p-6 flex flex-col gap-6 h-[calc(100vh-140px)] border border-white/5 overflow-y-auto">
+        <section className="glass-panel hidden lg:flex lg:col-span-3 rounded-3xl p-6 flex flex-col gap-6 h-[calc(100vh-140px)] border border-white/5 overflow-y-auto custom-scrollbar">
           {selectedConv ? (
             <>
               <div>
-                <h3 className="text-sm font-semibold text-[#a1a1aa] uppercase tracking-wider mb-4">Chi tiết Khách hàng</h3>
+                <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">Chi tiết Khách hàng</h3>
                 <div className="flex flex-col items-center text-center gap-3">
-                  <div className="w-20 h-20 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-400 font-bold text-3xl">
+                  <div className="w-20 h-20 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-400 font-bold text-3xl shadow-inner">
                     {selectedConv.customer_name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h4 className="font-bold text-lg">{selectedConv.customer_name}</h4>
-                    <p className="text-xs text-[#a1a1aa] mt-1">ID: {selectedConv.customer_id}</p>
+                    <h4 className="font-bold text-lg text-zinc-200">{selectedConv.customer_name}</h4>
+                    <p className="text-xs text-zinc-500 mt-1">Mã KH: {selectedConv.customer_id}</p>
                   </div>
                 </div>
               </div>
@@ -964,28 +1267,37 @@ export default function ChatHub() {
               <hr className="border-white/5" />
 
               {/* Bot Control Panel */}
-              <div>
-                <h3 className="text-sm font-semibold text-[#a1a1aa] uppercase tracking-wider mb-3">Tự động hóa AI</h3>
-                <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5">
+              <div className="p-5 rounded-2xl bg-zinc-950/40 border border-zinc-850 hover:border-zinc-800 transition-all flex flex-col gap-4">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Sparkles className="w-5 h-5 text-amber-400" />
+                    <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                      <Sparkles className="w-4.5 h-4.5 text-amber-400" />
+                    </div>
                     <div>
-                      <span className="text-sm font-medium block">Tự động trả lời</span>
-                      <span className="text-[10px] text-[#a1a1aa]">AI sẽ tự động chat với khách</span>
+                      <span className="text-sm font-semibold block text-zinc-200">Tự động trả lời AI</span>
+                      <span className="text-[10px] text-zinc-500">Google Gemini tự phản hồi</span>
                     </div>
                   </div>
                   
-                  {/* Custom Toggle Switch */}
+                  {/* Premium Slide Switch */}
                   <button 
                     onClick={handleToggleAi}
                     disabled={togglingAi}
-                    className={`w-11 h-6 rounded-full relative transition-all ${
-                      selectedConv.ai_active ? "bg-blue-600" : "bg-zinc-700"
+                    className={`w-12 h-6.5 rounded-full relative transition-all duration-350 outline-none cursor-pointer flex items-center ${
+                      selectedConv.ai_active 
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md shadow-blue-500/20" 
+                        : "bg-zinc-800 border border-zinc-700"
                     }`}
                   >
-                    <span className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
-                      selectedConv.ai_active ? "translate-x-5" : "translate-x-0"
-                    }`} />
+                    {togglingAi ? (
+                      <Loader2 className={`w-3.5 h-3.5 animate-spin text-white absolute ${
+                        selectedConv.ai_active ? "right-1.5" : "left-1.5"
+                      }`} />
+                    ) : (
+                      <span className={`bg-white w-4.5 h-4.5 rounded-full shadow-md transition-all duration-350 absolute ${
+                        selectedConv.ai_active ? "left-6.5" : "left-1"
+                      }`} />
+                    )}
                   </button>
                 </div>
               </div>
@@ -993,15 +1305,15 @@ export default function ChatHub() {
               <hr className="border-white/5" />
 
               <div>
-                <h3 className="text-sm font-semibold text-[#a1a1aa] uppercase tracking-wider mb-3">Nguồn Fanpage</h3>
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-xs space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-[#a1a1aa]">Tên trang:</span>
-                    <span className="font-medium text-white">{selectedConv.fanpage_name}</span>
+                <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Nguồn Fanpage</h3>
+                <div className="p-4 rounded-2xl bg-zinc-950/40 border border-zinc-850 text-xs space-y-2">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-zinc-500">Tên trang:</span>
+                    <span className="font-semibold text-zinc-300 truncate max-w-[70%]">{selectedConv.fanpage_name}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#a1a1aa]">ID trang:</span>
-                    <span className="font-medium text-white">{selectedConv.fanpage_id}</span>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-zinc-500">ID trang:</span>
+                    <span className="font-mono text-zinc-300 truncate max-w-[70%]">{selectedConv.fanpage_id}</span>
                   </div>
                 </div>
               </div>
@@ -1015,29 +1327,29 @@ export default function ChatHub() {
             </div>
           )}
 
-          {/* ── Webhook Simulator ── always visible ─────────────── */}
+          {/* Webhook Simulator */}
           <div>
-            <h3 className="text-sm font-semibold text-[#a1a1aa] uppercase tracking-wider mb-3">Mô phỏng Webhook</h3>
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/5 flex flex-col gap-3">
+            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Mô phỏng Webhook</h3>
+            <div className="p-4 rounded-2xl bg-zinc-950/40 border border-zinc-850 flex flex-col gap-3">
               <div className="flex items-start gap-2 text-[11px] text-[#a1a1aa]">
                 <AlertCircle className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
                 <p>Giả lập khách hàng nhắn tin vào trang để test real-time.</p>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] text-[#a1a1aa] font-medium">Nội dung tin nhắn:</label>
+                <label className="text-[11px] text-zinc-500 font-medium">Nội dung tin nhắn:</label>
                 <textarea 
                   value={simMessage}
                   onChange={(e) => setSimMessage(e.target.value)}
                   rows={3}
-                  className="w-full bg-[#09090b] border border-white/5 rounded-xl px-3 py-2 text-xs text-[#f4f4f5] focus:outline-none focus:border-blue-500 resize-none"
+                  className="w-full bg-[#09090b] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-[#f4f4f5] focus:outline-none focus:border-blue-500 resize-none outline-none"
                 />
               </div>
 
               <button
                 onClick={handleSimulateWebhookMessage}
                 disabled={isSimulating || !activeFanpage || !simMessage.trim()}
-                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 transition-colors text-white text-xs font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 transition-colors text-white text-xs font-semibold flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {isSimulating ? (
                   <>
@@ -1052,6 +1364,12 @@ export default function ChatHub() {
                 )}
               </button>
 
+              {!activeFanpage && (
+                <p className="text-[10px] text-yellow-500/90 text-center leading-relaxed mt-2 bg-yellow-500/5 border border-yellow-500/10 p-2 rounded-xl">
+                  ⚠️ Hãy cấu hình **Địa chỉ Backend API** thành HTTPS (Ví dụ: `https://c74a7c0939d2ee.lhr.life`) ở Trang chủ để tải được Fanpage trước khi gửi giả lập.
+                </p>
+              )}
+
               {simSuccess && (
                 <div className="p-2.5 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] text-center font-medium">
                   ✅ Gửi thành công! Tin nhắn vừa xuất hiện trong chat.
@@ -1062,6 +1380,19 @@ export default function ChatHub() {
         </section>
       </main>
 
+      {/* Footer Branding */}
+      <footer className="w-full py-4 text-center text-xs text-zinc-650 border-t border-zinc-850 z-10 bg-[#09090b]/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p>© {new Date().getFullYear()} Zeflyo Omnichannel Hub. All rights reserved.</p>
+          <div className="flex gap-4 items-center">
+            <span className="flex items-center gap-1.5"><HelpCircle className="w-3.5 h-3.5" /> Phase 1 Setup Verified</span>
+            <span>•</span>
+            <span className="flex items-center gap-1.5"><Sliders className="w-3.5 h-3.5" /> Multi-Tenant Architecture</span>
+          </div>
+        </div>
+      </footer>
+
+      </div>
     </div>
   );
 }

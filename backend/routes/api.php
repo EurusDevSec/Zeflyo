@@ -26,5 +26,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/conversations/{customer}/messages', [\App\Http\Controllers\ChatController::class, 'messages']);
     Route::post('/conversations/{customer}/messages', [\App\Http\Controllers\ChatController::class, 'send']);
     Route::post('/customers/{customer}/toggle-ai', [\App\Http\Controllers\ChatController::class, 'toggleAi']);
+
+    // Post Scheduler APIs
+    Route::get('/posts/schedule', [\App\Http\Controllers\PostSchedulerController::class, 'index']);
+    Route::post('/posts/schedule', [\App\Http\Controllers\PostSchedulerController::class, 'store']);
+    Route::delete('/posts/schedule/{id}', [\App\Http\Controllers\PostSchedulerController::class, 'destroy']);
+
+    // Auto-Reply Rules APIs
+    Route::apiResource('/auto-reply-rules', \App\Http\Controllers\AutoReplyRuleController::class);
 });
 

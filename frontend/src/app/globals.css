@@ -41,12 +41,38 @@ body {
   50% { opacity: 0.35; transform: scale(1.05); }
 }
 
+@keyframes pulse-glow-delayed {
+  0%, 100% { opacity: 0.3; transform: scale(1.05) translate(0px, 0px); }
+  50% { opacity: 0.15; transform: scale(0.9) translate(15px, -15px); }
+}
+
+@keyframes gradientBg {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
 
 .animate-pulse-glow {
   animation: pulse-glow 8s ease-in-out infinite;
+}
+
+.animate-pulse-glow-delayed {
+  animation: pulse-glow-delayed 12s ease-in-out infinite;
+}
+
+.animated-gradient {
+  background: linear-gradient(-45deg, #09090b, #0e0a1b, #070d1d, #120921, #09090b);
+  background-size: 400% 400%;
+  animation: gradientBg 18s ease infinite;
+}
+
+.light .animated-gradient {
+  background: linear-gradient(-45deg, #f1f5f9, #e2e8f0, #e0e7ff, #fae8ff, #f1f5f9) !important;
+  background-size: 400% 400% !important;
 }
 
 /* Glassmorphism utility */
@@ -70,4 +96,163 @@ body {
   border-color: rgba(59, 130, 246, 0.3);
   transform: translateY(-2px);
 }
+
+/* Premium Light Theme Overrides */
+.light {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --border: #e2e8f0;
+  --input: #ffffff;
+}
+
+.light body {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.light .bg-\[\#09090b\],
+.light .bg-zinc-950,
+.light .bg-zinc-950\/60,
+.light .bg-zinc-950\/40,
+.light .bg-zinc-950\/20,
+.light .bg-zinc-950\/80 {
+  background-color: #f1f5f9 !important;
+}
+
+.light .bg-zinc-900,
+.light .bg-zinc-900\/60,
+.light .bg-zinc-900\/50,
+.light .bg-zinc-900\/40,
+.light .bg-zinc-900\/30,
+.light .bg-zinc-900\/20,
+.light .bg-zinc-900\/10,
+.light .bg-zinc-850,
+.light .bg-\[\#18181b\],
+.light .glass-panel,
+.light .bg-white\/5,
+.light .bg-white\/\[0\.01\],
+.light .bg-white\/\[0\.02\],
+.light .bg-white\/\[0\.05\] {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+}
+
+.light .text-\[\#f4f4f5\],
+.light .text-\[\#e4e4e7\],
+.light .text-zinc-100,
+.light .text-zinc-150,
+.light .text-zinc-200,
+.light .text-zinc-300,
+.light .text-zinc-350,
+.light .text-white,
+.light .text-zinc-900\.5 {
+  color: #0f172a !important;
+}
+
+.light .text-zinc-400,
+.light .text-zinc-550,
+.light .text-\[\#a1a1aa\],
+.light .text-zinc-500,
+.light .text-zinc-600,
+.light .text-zinc-650 {
+  color: #475569 !important;
+}
+
+.light .border-zinc-700,
+.light .border-zinc-800,
+.light .border-zinc-850,
+.light .border-zinc-900,
+.light .border-white\/5,
+.light .border-white\/10 {
+  border-color: #cbd5e1 !important;
+}
+
+.light input,
+.light select,
+.light textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.light option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.light .bg-blue-600 {
+  background-color: #2563eb !important;
+}
+
+.light .bg-blue-600 .text-white,
+.light .bg-blue-600 span,
+.light .bg-blue-600 p {
+  color: #ffffff !important;
+}
+
+/* Light theme bubble override for chat */
+.light .bg-zinc-900.border-zinc-800 {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.light .bg-zinc-900.border-zinc-800 span {
+  color: #64748b !important;
+}
+
+.light .bg-amber-500\/10 {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+}
+
+.light .bg-amber-500\/10 p,
+.light .bg-amber-500\/10 span {
+  color: #78350f !important;
+}
+
+/* Selected list items in light mode (e.g. Chat sidebar) */
+.light .bg-white\/5.border-blue-600 {
+  background-color: rgba(37, 99, 235, 0.08) !important;
+  color: #2563eb !important;
+}
+
+.light .bg-white\/5.border-blue-600 span {
+  color: #2563eb !important;
+}
+
+/* Divide borders */
+.light .divide-white\/5 > * {
+  border-color: #e2e8f0 !important;
+}
+
+/* Hover styles for buttons and lists in light mode */
+.light .hover\:bg-white\/\[0\.02\]:hover,
+.light .hover\:bg-white\/10:hover,
+.light .hover\:bg-zinc-800:hover,
+.light .hover\:bg-zinc-900:hover,
+.light .hover\:bg-zinc-900\/30:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Ensure footer background is light and transparent in light mode */
+.light .bg-\[\#09090b\]\/80 {
+  background-color: rgba(241, 245, 249, 0.85) !important;
+}
+
+/* Ensure white and light-colored gradient texts (like logo and title headings) are readable in light mode */
+.light .bg-gradient-to-r.from-white.via-zinc-200.to-zinc-400,
+.light .bg-gradient-to-b.from-white.to-zinc-300,
+.light .bg-gradient-to-r.from-blue-400.to-indigo-400 {
+  background-image: linear-gradient(to right, #2563eb, #4f46e5) !important;
+  color: transparent !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+}
+
 

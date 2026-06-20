@@ -34,10 +34,10 @@
 - [x] Frontend (Tiến): Live Chat Hub UI (Next.js) displaying dynamic inbox and active conversation bubbles. Laravel Echo WebSockets integration.
 
 ### Phase 4: Automation & AI Engine (Day 10 - 11) - [Specs](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docs/phases/phase4_automation_ai.md)
-- [ ] Backend (Khoa): Build keyword-based auto-reply rules engine.
+- [x] Backend (Khoa): Build keyword-based auto-reply rules engine.
 - [ ] Backend (Khoa): Integrate Google Gemini API for intelligent automated responses.
-- [ ] Fullstack (Tiến): Build Post Scheduler feature (Form UI + DB schema `scheduled_posts` + `php artisan posts:publish` task run every minute via Laravel scheduler).
-- [ ] Fullstack (Tiến): Build Keyword Auto-Reply Rule management UI/API.
+- [x] Fullstack (Tiến): Build Post Scheduler feature (Form UI + DB schema `scheduled_posts` + `php artisan posts:publish` task run every minute via Laravel scheduler).
+- [x] Fullstack (Tiến): Build Keyword Auto-Reply Rule management UI/API.
 - [ ] Security (Khoa): Security review, DB field encryption for tokens, and API pentesting on local.
 
 ### Phase 5: CI/CD AWS Deploy & Monitoring (Day 12 - 14) - [Specs](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docs/phases/phase5_cicd_aws.md)

@@ -127,6 +127,7 @@ class ChatController extends Controller
             $pageToken = $fanpage->access_token; // Automatically decrypted
 
             // If it is the local mock token, bypass Facebook request and mock success
+            // mock_page_token_123 is used for test purpose only
             if ($pageToken === 'mock_page_token_123') {
                 Log::info("Mock Facebook Message Sent: To={$recipientPsid}, Msg=\"{$text}\"");
                 return true;

@@ -633,7 +633,9 @@ export default function ChatHub() {
         is_from_customer: true,
         created_at: new Date().toISOString()
       };
+      // Instead of receiving jSON from Facebook Graph API, we create a mock data
       const mockCustomer = { id: 101, name: "Jane Dove (Mock)", avatar_url: null, ai_active: true };
+      
       handleIncomingEvent({ interaction: mockInteraction, customer: mockCustomer });
       setSimSuccess(true);
       setSimMessage("");

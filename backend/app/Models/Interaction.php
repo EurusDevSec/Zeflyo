@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['customer_id', 'fanpage_id', 'type', 'fb_item_id', 'fb_post_id', 'content', 'is_from_customer'])]
+#[Fillable(['customer_id', 'fanpage_id', 'type', 'fb_item_id', 'fb_post_id', 'content', 'is_from_customer', 'reply_source'])]
 class Interaction extends Model
 {
     /**

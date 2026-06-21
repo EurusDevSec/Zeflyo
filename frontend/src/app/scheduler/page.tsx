@@ -88,6 +88,11 @@ export default function PostScheduler() {
   ]);
   const [activeQueueIndex, setActiveQueueIndex] = useState<number>(0);
   const [selectedPages, setSelectedPages] = useState<number[]>([]);
+  
+  // AI Generator state
+  const [aiTopic, setAiTopic] = useState<string>("");
+  const [aiTone, setAiTone] = useState<string>("Thân thiện");
+  const [aiGenerating, setAiGenerating] = useState<boolean>(false);
   const [scheduleMode, setScheduleMode] = useState<"weekly" | "fixed">("weekly");
   const [scheduleTimes, setScheduleTimes] = useState<string[]>(["08:00"]);
   const [scheduleDays, setScheduleDays] = useState<number[]>([1, 3, 5]); // 1 = Mon, ..., 7 = Sun
@@ -567,6 +572,71 @@ export default function PostScheduler() {
     }
   };
 
+  const handleGenerateAiContent = async () => {
+    if (!aiTopic.trim()) return;
+
+    setAiGenerating(true);
+    showNotification("success", "Đang kết nối AI sinh bài viết...");
+
+    if (token && token.startsWith("mock_")) {
+      // Mock generation delay
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      
+      const mockTemplates: Record<string, string[]> = {
+        "Thân thiện": [
+          "🌸 Mùa hè gõ cửa rồi cả nhà ơi! Đã đến lúc F5 tủ đồ với những chiếc váy hoa siêu xinh xắn từ Zeflyo Store rồi nè.\n\n✨ Với chất liệu voan tơ mềm mại, bay bổng cùng họa tiết hoa nhí ngọt ngào, mẫu váy mới này sẽ giúp các nàng tự tin tỏa sáng dưới nắng hè rực rỡ.\n\n👉 Nhanh tay sở hữu ngay em nó nhé! Mua ngay tại cửa hàng hoặc inbox Zeflyo để được tư vấn tận tình nào!\n\n#ZeflyoFashion #VayHoaMuaHe #OOTD #Xuhuong",
+          "👋 Chào ngày mới ngập tràn năng lượng! Bạn đã chuẩn bị trang phục cho buổi hẹn hò cuối tuần chưa?\n\n📸 Hãy để Zeflyo gợi ý cho bạn bộ cánh cực chất này nhé. Đảm bảo thu hút mọi ánh nhìn luôn!\n\n❤️ Để lại bình luận hoặc nhắn tin trực tiếp cho Shop để nhận mã giảm giá đặc biệt nha.\n\n#Zeflyo #FriendlyStyle #VayXinh #Shopping"
+        ],
+        "Lịch sự": [
+          "Kính gửi quý khách hàng,\n\nZeflyo xin trân trọng giới thiệu Bộ sưu tập Thời trang Công sở Mới nhất. Thiết kế sang trọng, tối giản nhưng không kém phần hiện đại, mang lại sự tự tin và chuyên nghiệp trong mọi buổi gặp gỡ.\n\n📍 Chất liệu cao cấp chống nhăn, thoáng mát tối ưu.\n📍 Kiểu dáng tinh tế, đường may sắc sảo.\n\nQuý khách vui lòng liên hệ hotline hoặc inbox Fanpage để nhận tư vấn chi tiết về kích thước và chương trình ưu đãi đặc quyền.\n\nTrân trọng cảm ơn quý khách.\n\n#ZeflyoOffice #FormalWear #ClassyStyle #Professional",
+        ],
+        "Khuyến mãi": [
+          "💥 SIÊU SALE BÙNG NỔ - GIẢM GIÁ ĐẾN 50% TOÀN BỘ CỬA HÀNG! 💥\n\nCơ hội mua sắm lớn nhất năm tại Zeflyo đã chính thức bắt đầu. Hàng ngàn sản phẩm hot trend đang chờ đón bạn với mức giá cực hời.\n\n🔥 Đồng giá chỉ từ 99K cho nhiều dòng sản phẩm bán chạy.\n🔥 Tặng kèm Voucher 50K cho hóa đơn từ 500K.\n⏰ Chương trình áp dụng từ nay đến hết ngày chủ nhật.\n\n⚡ Số lượng có hạn! Đừng bỏ lỡ cơ hội sở hữu những sản phẩm chất lượng với mức giá ưu đãi nhất.\n\n👉 SHOP NOW: Inbox để đặt hàng ngay kẻo hết!\n\n#ZeflyoSale #KhuyenMaiKhaiThac #HotSale #FlashSale",
+        ],
+        "Hài hước": [
+          "Nghe nói anh thích con gái dịu dàng... 🌸\nMay quá em đây vừa dịu dàng lại vừa có váy xinh của Zeflyo!\n\n👗 Đẹp tự nhiên không cần son phấn, chỉ cần khoác lên mình chiếc đầm hoa nhí này là crush tự động đổ đứ đừ.\n\n👉 Giá rổ yêu thương, inbox là có người trả lời liền tay (AI nhà em rep nhanh hơn tốc độ crush lật mặt).\n\n#ZeflyoHumor #TrendingOutfit #VayDep #Cute",
+        ]
+      };
+
+      const selectedTemplates = mockTemplates[aiTone] || mockTemplates["Thân thiện"];
+      const generatedText = `${selectedTemplates[Math.floor(Math.random() * selectedTemplates.length)]}\n\n[Ý tưởng: ${aiTopic}]`;
+
+      handleContentChange(generatedText);
+      showNotification("success", "Đã tạo nội dung bài viết bằng AI (Giả lập)!");
+      setAiGenerating(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/posts/generate-ai`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          topic: aiTopic,
+          tone: aiTone
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        handleContentChange(data.content);
+        showNotification("success", "Tạo bài đăng bằng AI thành công!");
+      } else {
+        showNotification("error", data.error || "Lỗi tạo bài đăng bằng AI.");
+      }
+    } catch (err) {
+      console.error(err);
+      showNotification("error", "Lỗi kết nối. Vui lòng thử lại sau.");
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
   const activePost = queue[activeQueueIndex] || { content: "", imageUrl: "" };
 
   return (
@@ -871,6 +941,59 @@ export default function PostScheduler() {
                       })}
                     </div>
 
+                    {/* AI Writer Panel */}
+                    <div className="flex flex-col gap-3.5 bg-blue-650/[0.03] border border-blue-500/10 rounded-2xl p-4 mt-2">
+                      <div className="flex items-center gap-2 text-xs font-bold text-blue-400 uppercase tracking-wider">
+                        <Sparkles className="w-4 h-4 text-blue-550" />
+                        <span>Trình viết bài bằng AI</span>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="sm:col-span-2 flex flex-col gap-1.5">
+                          <span className="text-[11px] text-zinc-450 font-bold">Chủ đề / Ý tưởng</span>
+                          <input 
+                            type="text"
+                            value={aiTopic}
+                            onChange={(e) => setAiTopic(e.target.value)}
+                            placeholder="Ví dụ: Giảm giá 20% váy hoa mùa hè..."
+                            className="bg-zinc-950/60 border border-zinc-850 focus:border-blue-500/50 rounded-xl px-3 py-2 text-xs outline-none text-zinc-250 placeholder:text-zinc-650"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] text-zinc-450 font-bold">Giọng điệu</span>
+                          <select
+                            value={aiTone}
+                            onChange={(e) => setAiTone(e.target.value)}
+                            className="bg-zinc-950/60 border border-zinc-850 focus:border-blue-500/50 rounded-xl px-3 py-2 text-xs outline-none text-zinc-250 cursor-pointer"
+                          >
+                            <option value="Thân thiện">Thân thiện</option>
+                            <option value="Lịch sự">Lịch sự</option>
+                            <option value="Khuyến mãi">Khuyến mãi</option>
+                            <option value="Hài hước">Hài hước</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleGenerateAiContent}
+                        disabled={aiGenerating || !aiTopic.trim()}
+                        className="flex items-center justify-center gap-2 py-2 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-600 disabled:cursor-not-allowed text-xs font-bold text-white rounded-xl transition-all cursor-pointer shadow-sm shadow-blue-500/5 active:scale-95"
+                      >
+                        {aiGenerating ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>Đang viết bài...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>Tạo bằng AI (Generate with AI)</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
                     {/* Post Content Input Area */}
                     <div className="flex flex-col gap-2 border-t border-zinc-850 pt-5">
                       <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Nội dung bài viết #{activeQueueIndex + 1}</label>
@@ -932,6 +1055,73 @@ export default function PostScheduler() {
                           </div>
                         </div>
                       )}
+                    </div>
+
+                    {/* Real-time Facebook Post Mockup Preview */}
+                    <div className="flex flex-col gap-3 border-t border-zinc-850 pt-5">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Bản xem trước trực quan (Facebook Live Preview)</label>
+                      
+                      <div className="w-full bg-[#18181b] border border-zinc-800 rounded-xl overflow-hidden shadow-xl text-zinc-200">
+                        {/* Post Header */}
+                        <div className="p-4 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-white text-sm shadow-md">
+                              {fanpages.find(p => selectedPages.includes(p.id))?.avatar_url ? (
+                                <img 
+                                  src={fanpages.find(p => selectedPages.includes(p.id))?.avatar_url!} 
+                                  alt="Page Avatar" 
+                                  className="w-full h-full rounded-full object-cover"
+                                />
+                              ) : (
+                                "Z"
+                              )}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-xs font-bold text-zinc-150">
+                                {fanpages.find(p => selectedPages.includes(p.id))?.name || "Zeflyo Fanpage"}
+                              </span>
+                              <span className="text-[10px] text-zinc-550 flex items-center gap-1">
+                                <span>Vừa xong</span>
+                                <span>•</span>
+                                <Globe className="w-3 h-3 text-zinc-550" />
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <button className="text-zinc-600 hover:text-zinc-400">
+                            <span className="text-lg font-bold">•••</span>
+                          </button>
+                        </div>
+                        
+                        {/* Post Text */}
+                        <div className="px-4 pb-3 text-xs text-zinc-300 whitespace-pre-wrap leading-relaxed select-text">
+                          {activePost.content || <span className="text-zinc-650 italic">Chưa nhập nội dung bài viết...</span>}
+                        </div>
+                        
+                        {/* Post Media */}
+                        {activePost.imageUrl && (
+                          <div className="w-full border-y border-zinc-850 max-h-[320px] overflow-hidden flex items-center justify-center bg-zinc-950">
+                            <img 
+                              src={activePost.imageUrl} 
+                              alt="Post Media Preview" 
+                              className="w-full object-cover"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Post Actions Mock */}
+                        <div className="px-4 py-2 border-t border-zinc-850 flex items-center justify-between text-zinc-500 text-xs">
+                          <button className="flex-1 py-1.5 flex items-center justify-center gap-2 hover:bg-zinc-900 rounded-lg transition-colors font-medium">
+                            👍 Thích
+                          </button>
+                          <button className="flex-1 py-1.5 flex items-center justify-center gap-2 hover:bg-zinc-900 rounded-lg transition-colors font-medium">
+                            💬 Bình luận
+                          </button>
+                          <button className="flex-1 py-1.5 flex items-center justify-center gap-2 hover:bg-zinc-900 rounded-lg transition-colors font-medium">
+                            ↩️ Chia sẻ
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
                     <button 

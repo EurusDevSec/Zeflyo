@@ -126,4 +126,50 @@ class AutomationTest extends TestCase
         $this->assertNotNull($replyInteraction);
         $this->assertEquals('message', $replyInteraction->type);
     }
+
+    /**
+     * Test AI content generation endpoint.
+     */
+    public function test_generate_ai_post_content_returns_success(): void
+    {
+        Http::fake([
+            'https://generativelanguage.googleapis.com/*' => Http::response([
+                'candidates' => [
+                    [
+                        'content' => [
+                            ['text' => 'Đây là bài viết mẫu tạo từ AI.'],
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        config(['services.gemini.key' => 'test_key']);
+
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/posts/generate-ai', [
+                'topic' => 'Váy hoa mùa hè',
+                'tone' => 'Thân thiện'
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'content' => 'Đây là bài viết mẫu tạo từ AI.'
+            ]);
+    }
+
+    /**
+     * Test AI content generation endpoint validation.
+     */
+    public function test_generate_ai_post_content_validation_error(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/posts/generate-ai', [
+                // 'topic' is missing
+                'tone' => 'Thân thiện'
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['topic']);
+    }
 }

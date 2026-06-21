@@ -90,4 +90,40 @@ class PostSchedulerController extends Controller
             'message' => 'Scheduled post deleted successfully'
         ]);
     }
+
+    /**
+     * Generate post content using Gemini AI.
+     */
+    public function generateAi(Request $request)
+    {
+        $request->validate([
+            'topic' => 'required|string',
+            'tone' => 'nullable|string',
+        ]);
+
+        $topic = $request->input('topic');
+        $tone = $request->input('tone', 'Thân thiện');
+
+        $systemPrompt = "Bạn là một chuyên gia marketing / viết bài quảng cáo thương mại điện tử chuyên nghiệp trên Facebook.\n"
+            . "Nhiệm vụ của bạn là viết một bài đăng Facebook hấp dẫn dựa trên chủ đề người dùng cung cấp.\n"
+            . "Hãy tuân thủ các yêu cầu sau:\n"
+            . "1. Bố cục bài đăng phải rõ ràng, phân chia đoạn mạch lạc.\n"
+            . "2. Sử dụng các emoji sinh động, phù hợp để bài viết trực quan và thu hút hơn.\n"
+            . "3. Kết thúc bài viết bằng một lời kêu gọi hành động (CTA) thân thiện và danh sách các hashtag phổ biến liên quan.\n"
+            . "4. Giọng điệu của bài viết phải là: {$tone}.\n"
+            . "Hãy chỉ trả về nội dung của bài viết đăng Facebook đó, không thêm bất kỳ văn bản chào hỏi hay giải thích nào khác.";
+
+        $service = new \App\Services\GeminiService();
+        $content = $service->generateReply($topic, $systemPrompt);
+
+        if ($content === null) {
+            return response()->json([
+                'error' => 'Không thể sinh nội dung bằng AI tại thời điểm này. Vui lòng kiểm tra API Key hoặc thử lại sau.'
+            ], 500);
+        }
+
+        return response()->json([
+            'content' => $content
+        ]);
+    }
 }

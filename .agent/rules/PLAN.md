@@ -35,10 +35,15 @@
 
 ### Phase 4: Automation & AI Engine (Day 10 - 11) - [Specs](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docs/phases/phase4_automation_ai.md)
 - [x] Backend (Khoa): Build keyword-based auto-reply rules engine.
-- [ ] Backend (Khoa): Integrate Google Gemini API for intelligent automated responses.
+- [x] Backend (Khoa): Integrate Google Gemini API for intelligent automated responses.
 - [x] Fullstack (Tiến): Build Post Scheduler feature (Form UI + DB schema `scheduled_posts` + `php artisan posts:publish` task run every minute via Laravel scheduler).
 - [x] Fullstack (Tiến): Build Keyword Auto-Reply Rule management UI/API.
 - [ ] Security (Khoa): Security review, DB field encryption for tokens, and API pentesting on local.
+
+### Phase 4.5: AI Post Content Generator (Day 11.5) - [Specs](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docs/phases/phase4_5_ai_post_generation.md)
+- [x] Backend (Khoa): Build API route /api/posts/generate-ai calling GeminiService.
+- [x] Frontend (Tiến): Build AI Writer Panel and Facebook Live Mockup Preview on `/scheduler` page.
+- [x] Testing: Write feature test suite verification for AI content generation API.
 
 ### Phase 5: CI/CD AWS Deploy & Monitoring (Day 12 - 14) - [Specs](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docs/phases/phase5_cicd_aws.md)
 - [ ] DevOps (Hoàng): Complete Terraform scripts. Set up GitHub Actions CI/CD (Pest test, Larastan, Trivy scan, ECR upload, ECS rolling update deploy).

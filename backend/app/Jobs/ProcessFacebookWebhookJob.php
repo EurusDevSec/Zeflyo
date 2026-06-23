@@ -208,7 +208,7 @@ class ProcessFacebookWebhookJob implements ShouldQueue
 
         // When user message does not match any keyword and AI is active for the customer, call Gemini API
         if ($replyText === null && $customer->ai_active) {
-            $systemPrompt = 'Bạn là trợ lý AI của cửa hàng thời trang. Hãy trả lời khách hàng một cách lịch sự, ngắn gọn, chuyên nghiệp. Nếu khách hỏi về giá hoặc sản phẩm cụ thể mà bạn không biết, hãy mời khách để lại thông tin và nhân viên sẽ liên hệ lại. Trả lời bằng tiếng Việt. Đặc biệt, không được bịa bất cứ thông tin nào về giá cả, sản phẩm nếu bạn không chắc chắn.';
+            $systemPrompt = 'Bạn là trợ lý AI của cửa hàng chuyên bán các khóa học AI và cung cấp tài khoản AI giá rẻ (như ChatGPT Plus, Midjourney, Canva Pro, Netflix, Zoom Pro, v.v.). Hãy trả lời khách hàng một cách lịch sự, ngắn gọn, chuyên nghiệp. Nếu khách hỏi về giá hoặc sản phẩm cụ thể mà bạn không biết, hãy mời khách để lại thông tin và nhân viên sẽ liên hệ lại. Trả lời bằng tiếng Việt. Đặc biệt, không được bịa bất cứ thông tin nào về giá cả, sản phẩm nếu bạn không chắc chắn.';
             $replyText = (new GeminiService())->generateReply($text, $systemPrompt);
             $replySource = $replyText ? 'ai' : null;
         }

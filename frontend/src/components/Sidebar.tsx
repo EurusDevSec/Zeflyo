@@ -23,8 +23,8 @@ interface UserProfile {
 
 interface SidebarProps {
   currentPath: "/" | "/scheduler" | "/chat" | "/rules" | "/autopost";
-  activeTab?: "setup" | "list" | "automation";
-  setActiveTab?: (tab: "setup" | "list" | "automation") => void;
+  activeTab?: "setup" | "list" | "automation" | "product_list";
+  setActiveTab?: (tab: any) => void;
   user: UserProfile | null;
   lang: "en" | "vi";
   toggleLanguage: () => void;
@@ -179,7 +179,17 @@ export default function Sidebar({
                       : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
                   }`}
                 >
-                  {lang === "en" ? "Products" : "Sản phẩm"}
+                  {lang === "en" ? "Add Product" : "Thêm sản phẩm"}
+                </button>
+                <button 
+                  onClick={() => setActiveTab("product_list")}
+                  className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "product_list" 
+                      ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
+                      : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
+                  }`}
+                >
+                  {lang === "en" ? "Product List" : "Danh sách sản phẩm"}
                 </button>
               </div>
             )}

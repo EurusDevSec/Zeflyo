@@ -113,14 +113,14 @@ class FacebookAuthController extends Controller
             ]
         );
 
-        // Ensure the demo Fanpage exists in database for this user
-        Fanpage::firstOrCreate(
+        // Ensure the demo Fanpage exists in database and belongs to the logged-in demo user
+        Fanpage::updateOrCreate(
             ['fb_page_id' => '1028776643660761'],
             [
                 'user_id' => $user->id,
                 'name' => 'Zeflyo Shop',
                 'access_token' => 'mock_page_token_123',
-                'avatar_url' => null,
+                'avatar_url' => 'https://scontent.fsgn5-12.fna.fbcdn.net/v/t39.30808-1/721191302_122104337678601169_7824205172456629659_n.jpg?stp=c0.12.924.923a_dst-jpg_s200x200_tt6&_nc_cat=103&ccb=1-7&_nc_sid=f907e8&_nc_ohc=18ez1ZOY5wMQ7kNvwFEfm4p&_nc_oc=Adqfa0kmQjtMKfqosX7_emW1NL93VjtytU_-czxgq6j9aPKXwNmX4ONqWrt9A_KwuCE&_nc_zt=24&_nc_ht=scontent.fsgn5-12.fna&edm=AGaHXAAEAAAA&_nc_gid=z7iPdlZ1k9Z_YS3Z3SW09w&_nc_tpa=Q5bMBQHoRMAne_dTpJDSP2icnyjbq1XIodzQekRObKSF6i7mbGAe3R93tc5bPtmbObWLtmEDtI6DKVASMQ&oh=00_Af8AYhMIqIpfpQj3A9rf31dd9MI17oeV_EWMsMIvuw59mg&oe=6A404194',
                 'is_active' => true,
             ]
         );

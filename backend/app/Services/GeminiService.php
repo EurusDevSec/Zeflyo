@@ -4,69 +4,115 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class GeminiService
 {
-    //Should set $apiKey accept null for test case $apiKey = null
-    protected ?string $apiKey;
+    protected array $apiKeys = [];
     protected string $model;
 
     public function __construct()
     {
-        $this->apiKey = config('services.gemini.key');
+        $rawKeys = config('services.gemini.key');
+        if (!empty($rawKeys)) {
+            // Support comma-separated list of API keys for rotation
+            $this->apiKeys = array_filter(array_map('trim', explode(',', $rawKeys)));
+        }
         $this->model = config('services.gemini.model', 'gemini-1.5-flash');
     }
 
-    public function generateReply(string $customerMessage, string $systemPrompt): ?string
+    /**
+     * Internal: Call Gemini API using a round-robin failover rotation algorithm.
+     */
+    private function makeApiCallWithRotation(array $payload): ?array
     {
-        if (empty($this->apiKey)) {
-            Log::warning('GeminiService cannot generate reply because GEMINI_API_KEY is not configured.');
+        if (empty($this->apiKeys)) {
+            Log::warning('GeminiService: No API keys configured.');
             return null;
+        }
+
+        $keyCount = count($this->apiKeys);
+        $startIndex = (int) Cache::get('gemini_api_key_index', 0);
+        
+        // Prevent index out of bounds if config list changed dynamically
+        if ($startIndex >= $keyCount) {
+            $startIndex = 0;
         }
 
         $endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent";
 
-        try {
-            $response = Http::timeout(120)->post("{$endpoint}?key={$this->apiKey}", [
-                'contents' => [
-                    [
-                        'role' => 'user',
-                        'parts' => [
-                            ['text' => trim($systemPrompt) . "\n\nKhách hàng: " . trim($customerMessage)]
-                        ],
+        for ($i = 0; $i < $keyCount; $i++) {
+            $currentIndex = ($startIndex + $i) % $keyCount;
+            $currentKey = $this->apiKeys[$currentIndex];
+
+            try {
+                $response = Http::timeout(120)->post("{$endpoint}?key={$currentKey}", $payload);
+
+                // 429 (Rate Limit) and 503 (High Demand/Overloaded) are temporary, rotate immediately
+                if ($response->status() === 429 || $response->status() === 503) {
+                    Log::warning("GeminiService: Key at index {$currentIndex} returned temporary code {$response->status()}. Rotating key...", [
+                        'body' => $response->body()
+                    ]);
+                    continue;
+                }
+
+                if (!$response->successful()) {
+                    Log::error("GeminiService: API Key at index {$currentIndex} call failed with status {$response->status()}.", [
+                        'body' => $response->body(),
+                    ]);
+                    continue;
+                }
+
+                $data = $response->json();
+                if (empty($data)) {
+                    Log::warning("GeminiService: Empty JSON response with key index {$currentIndex}.");
+                    continue;
+                }
+
+                // Balance load: update index for next call to round-robin
+                $nextIndex = ($currentIndex + 1) % $keyCount;
+                Cache::put('gemini_api_key_index', $nextIndex);
+
+                return $data;
+
+            } catch (\Exception $e) {
+                Log::error("GeminiService: Exception with key at index {$currentIndex}: " . $e->getMessage());
+                continue;
+            }
+        }
+
+        Log::error('GeminiService: All configured API keys failed to return a response.');
+        return null;
+    }
+
+    /**
+     * Generate customer response chat helper.
+     */
+    public function generateReply(string $customerMessage, string $systemPrompt): ?string
+    {
+        $payload = [
+            'contents' => [
+                [
+                    'role' => 'user',
+                    'parts' => [
+                        ['text' => trim($systemPrompt) . "\n\nKhách hàng: " . trim($customerMessage)]
                     ],
                 ],
-                'generationConfig' => [
-                    'temperature' => 0.7,
-                    'maxOutputTokens' => 2048,
-                    'topP' => 0.95,
-                ],
-            ]);
+            ],
+            'generationConfig' => [
+                'temperature' => 0.7,
+                'maxOutputTokens' => 2048,
+                'topP' => 0.95,
+            ],
+        ];
 
-            if (!$response->successful()) {
-                Log::error('GeminiService API call failed.', [
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-                return null;
-            }
-
-            $payload = $response->json();
-            $text = $payload['candidates'][0]['content']['parts'][0]['text'] ?? null;
-
-            if (!is_string($text) || trim($text) === '') {
-                Log::warning('GeminiService returned empty response.', ['payload' => $payload]);
-                return null;
-            }
-
-            return trim($text);
-        } catch (\Exception $e) {
-            Log::error('GeminiService exception during API call.', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+        $result = $this->makeApiCallWithRotation($payload);
+        if ($result === null) {
             return null;
         }
+
+        $text = $result['candidates'][0]['content']['parts'][0]['text'] ?? null;
+        return is_string($text) && trim($text) !== '' ? trim($text) : null;
     }
 
     /**
@@ -75,11 +121,6 @@ class GeminiService
      */
     public function generateTopicsList(string $prompt, int $count = 30, string $language = 'vi'): ?array
     {
-        if (empty($this->apiKey)) {
-            Log::warning('GeminiService: GEMINI_API_KEY is not configured.');
-            return null;
-        }
-
         $langName = $language === 'vi' ? 'tiếng Việt' : 'English';
 
         $systemPrompt = "Bạn là chuyên gia lên ý tưởng nội dung cho Facebook Fanpage.\n"
@@ -101,10 +142,6 @@ class GeminiService
      */
     public function generatePostFromTopic(string $topic, array $config): ?string
     {
-        if (empty($this->apiKey)) {
-            return null;
-        }
-
         $lengthMap = [
             'super_short' => 'cực ngắn (2-3 câu, dưới 50 từ)',
             'short' => 'ngắn (1 đoạn, khoảng 50-100 từ)',
@@ -156,10 +193,6 @@ class GeminiService
      */
     public function generatePostFromProduct(array $productInfo, array $config): ?string
     {
-        if (empty($this->apiKey)) {
-            return null;
-        }
-
         $productName = $productInfo['name'] ?? 'Sản phẩm';
         $productDesc = $productInfo['description'] ?? '';
 
@@ -176,36 +209,29 @@ class GeminiService
      */
     private function callGeminiText(string $userMessage, string $systemPrompt): ?string
     {
-        $endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent";
-
-        try {
-            $response = Http::timeout(120)->post("{$endpoint}?key={$this->apiKey}", [
-                'contents' => [
-                    [
-                        'role' => 'user',
-                        'parts' => [
-                            ['text' => trim($systemPrompt) . "\n\n" . trim($userMessage)]
-                        ],
+        $payload = [
+            'contents' => [
+                [
+                    'role' => 'user',
+                    'parts' => [
+                        ['text' => trim($systemPrompt) . "\n\n" . trim($userMessage)]
                     ],
                 ],
-                'generationConfig' => [
-                    'temperature' => 0.8,
-                    'maxOutputTokens' => 4096,
-                    'topP' => 0.95,
-                ],
-            ]);
+            ],
+            'generationConfig' => [
+                'temperature' => 0.8,
+                'maxOutputTokens' => 4096,
+                'topP' => 0.95,
+            ],
+        ];
 
-            if (!$response->successful()) {
-                Log::error('GeminiService text call failed.', ['status' => $response->status(), 'body' => $response->body()]);
-                return null;
-            }
-
-            $text = $response->json('candidates.0.content.parts.0.text');
-            return is_string($text) && trim($text) !== '' ? trim($text) : null;
-        } catch (\Exception $e) {
-            Log::error('GeminiService text exception.', ['error' => $e->getMessage()]);
+        $result = $this->makeApiCallWithRotation($payload);
+        if ($result === null) {
             return null;
         }
+
+        $text = $result['candidates'][0]['content']['parts'][0]['text'] ?? null;
+        return is_string($text) && trim($text) !== '' ? trim($text) : null;
     }
 
     /**
@@ -213,51 +239,42 @@ class GeminiService
      */
     private function callGeminiJson(string $prompt): ?array
     {
-        $endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent";
-
-        try {
-            $response = Http::timeout(120)->post("{$endpoint}?key={$this->apiKey}", [
-                'contents' => [
-                    [
-                        'role' => 'user',
-                        'parts' => [['text' => $prompt]],
-                    ],
+        $payload = [
+            'contents' => [
+                [
+                    'role' => 'user',
+                    'parts' => [['text' => $prompt]],
                 ],
-                'generationConfig' => [
-                    'temperature' => 0.7,
-                    'maxOutputTokens' => 4096,
-                    'topP' => 0.95,
-                    'responseMimeType' => 'application/json',
-                ],
-            ]);
+            ],
+            'generationConfig' => [
+                'temperature' => 0.7,
+                'maxOutputTokens' => 4096,
+                'topP' => 0.95,
+                'responseMimeType' => 'application/json',
+            ],
+        ];
 
-            if (!$response->successful()) {
-                Log::error('GeminiService JSON call failed.', ['status' => $response->status(), 'body' => $response->body()]);
-                return null;
-            }
-
-            $text = $response->json('candidates.0.content.parts.0.text');
-
-            if (!is_string($text)) {
-                return null;
-            }
-
-            // Clean potential markdown code fences
-            $text = trim($text);
-            $text = preg_replace('/^```(?:json)?\s*/i', '', $text);
-            $text = preg_replace('/\s*```$/i', '', $text);
-
-            $decoded = json_decode($text, true);
-
-            if (!is_array($decoded)) {
-                Log::warning('GeminiService JSON parse failed.', ['raw' => $text]);
-                return null;
-            }
-
-            return $decoded;
-        } catch (\Exception $e) {
-            Log::error('GeminiService JSON exception.', ['error' => $e->getMessage()]);
+        $result = $this->makeApiCallWithRotation($payload);
+        if ($result === null) {
             return null;
         }
+
+        $text = $result['candidates'][0]['content']['parts'][0]['text'] ?? null;
+        if (!is_string($text)) {
+            return null;
+        }
+
+        // Clean potential markdown code fences
+        $text = trim($text);
+        $text = preg_replace('/^```(?:json)?\s*/i', '', $text);
+        $text = preg_replace('/\s*```$/i', '', $text);
+
+        $decoded = json_decode($text, true);
+        if (!is_array($decoded)) {
+            Log::warning('GeminiService JSON parse failed.', ['raw' => $text]);
+            return null;
+        }
+
+        return $decoded;
     }
 }

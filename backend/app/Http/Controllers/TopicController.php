@@ -183,9 +183,10 @@ class TopicController extends Controller
                     continue;
                 }
 
-                if ($topic->generated_image_url) {
+                $imageUrl = $this->getPublicImageUrl($topic->generated_image_url);
+                if ($imageUrl) {
                     $response = Http::post("https://graph.facebook.com/v20.0/{$fbPageId}/photos", [
-                        'url' => $topic->generated_image_url,
+                        'url' => $imageUrl,
                         'caption' => $topic->generated_content,
                         'access_token' => $pageToken,
                     ]);
@@ -265,5 +266,25 @@ class TopicController extends Controller
             'message' => 'Topic updated successfully.',
             'topic' => $topic,
         ]);
+    }
+
+    /**
+     * Convert local image URL to public localtunnel URL so Facebook can download it.
+     */
+    private function getPublicImageUrl(?string $url): ?string
+    {
+        if (!$url) {
+            return null;
+        }
+
+        if (!str_contains($url, 'localhost') && !str_contains($url, '127.0.0.1') && !str_contains($url, 'host.docker.internal')) {
+            return $url;
+        }
+
+        $parsed = parse_url($url);
+        $path = $parsed['path'] ?? '';
+        $query = isset($parsed['query']) ? '?' . $parsed['query'] : '';
+
+        return 'https://zeflyo-dev.loca.lt' . $path . $query;
     }
 }

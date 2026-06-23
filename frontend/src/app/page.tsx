@@ -334,7 +334,8 @@ export default function App() {
         showNotification("error", "User cancelled Facebook login or did not fully authorize.");
       }
     }, {
-      scope: "pages_show_list,pages_messaging,pages_read_engagement,pages_manage_metadata,email,public_profile"
+      scope: "pages_show_list,pages_messaging,pages_read_engagement,pages_manage_metadata,pages_manage_posts,email,public_profile",
+      auth_type: "rerequest"
     });
   };
 

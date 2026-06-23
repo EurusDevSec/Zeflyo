@@ -167,6 +167,8 @@ export default function AutoPostPage() {
   const [productSearch, setProductSearch] = useState("");
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
   const [productSubmitting, setProductSubmitting] = useState(false);
+  const [bulkJson, setBulkJson] = useState("");
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
 
   // ── Init ──
   useEffect(() => {
@@ -525,6 +527,112 @@ export default function AutoPostPage() {
     } catch (e) { console.error(e); }
   };
 
+  const handleSeedMockProducts = async () => {
+    if (!token || bulkSubmitting) return;
+    setBulkSubmitting(true);
+    setSetupMsg(null);
+
+    const demoProducts = [
+      {
+        name: "Khóa học Master ChatGPT & Prompt Engineering",
+        description: "Khóa học giúp bạn làm chủ nghệ thuật viết prompt chuyên nghiệp, ứng dụng ChatGPT vào công việc Content Marketing, dịch thuật, lập trình và tự động hóa công việc hàng ngày.",
+        image_urls: ["https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&auto=format&fit=crop&q=60"],
+        comment: "💬 Liên hệ ngay để nhận voucher giảm giá 20% hôm nay!",
+      },
+      {
+        name: "Tài khoản ChatGPT Plus (Gói 1 Tháng)",
+        description: "Mở khóa toàn bộ sức mạnh của GPT-4o, DALL-E 3 tạo ảnh, Advanced Data Analysis phân tích dữ liệu, và sử dụng hàng ngàn GPTs chuyên dụng không giới hạn tốc độ.",
+        image_urls: ["https://images.unsplash.com/photo-1677442136019-21780efad99a?w=800&auto=format&fit=crop&q=60"],
+        comment: "⚡ Nâng cấp chính chủ - Bảo hành 1 đổi 1 suốt thời gian sử dụng.",
+      },
+      {
+        name: "Tài khoản Midjourney Pro (Tự thiết kế ảnh AI)",
+        description: "Tài khoản vẽ ảnh nghệ thuật AI đỉnh cao dành cho designer, marketer, sáng tạo nội dung. Tạo ảnh chất lượng cực nét, độc quyền sử dụng thương mại.",
+        image_urls: ["https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60"],
+        comment: "🎨 Thỏa sức sáng tạo không giới hạn cùng công cụ vẽ AI số 1 thế giới.",
+      },
+      {
+        name: "Tài khoản Canva Pro (Hạn dùng 1 Năm)",
+        description: "Mở khóa toàn bộ template thiết kế cao cấp, kho ảnh/video khổng lồ, tính năng xóa nền 1-click và resize thiết kế nhanh chóng. Phù hợp cho cá nhân và nhóm.",
+        image_urls: ["https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&auto=format&fit=crop&q=60"],
+        comment: "✨ Gia hạn chính chủ tài khoản của bạn, an toàn tuyệt đối.",
+      },
+      {
+        name: "Khóa học Thiết kế & Video AI Automation",
+        description: "Học cách sử dụng kết hợp Canva, CapCut và các công cụ AI (HeyGen, ElevenLabs) để sản xuất hàng loạt video ngắn TikTok, Reels, Shorts thu hút triệu view tự động.",
+        image_urls: ["https://images.unsplash.com/photo-1616469829581-73993eb86b02?w=800&auto=format&fit=crop&q=60"],
+        comment: "🎬 Tặng kèm kho tài nguyên template CapCut & Canva Premium miễn phí.",
+      }
+    ];
+
+    try {
+      let successCount = 0;
+      for (const prod of demoProducts) {
+        const res = await fetch(`${apiBaseUrl}/api/products`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            name: prod.name,
+            description: prod.description,
+            image_urls: prod.image_urls,
+            comment: prod.comment,
+            auto_post_enabled: true
+          }),
+        });
+        if (res.ok) successCount++;
+      }
+      if (successCount > 0) {
+        fetchProducts();
+        setSetupMsg({ type: "success", text: lang === "vi" ? `Đã tạo thành công ${successCount} sản phẩm mẫu!` : `Successfully seeded ${successCount} demo products!` });
+      } else {
+        setSetupMsg({ type: "error", text: lang === "vi" ? "Lỗi tạo sản phẩm mẫu." : "Failed to seed products." });
+      }
+    } catch (e) {
+      console.error(e);
+      setSetupMsg({ type: "error", text: "Connection error seeding products." });
+    } finally {
+      setBulkSubmitting(false);
+    }
+  };
+
+  const handleBulkJsonImport = async () => {
+    if (!token || !bulkJson.trim() || bulkSubmitting) return;
+    setBulkSubmitting(true);
+    setSetupMsg(null);
+    try {
+      const parsed = JSON.parse(bulkJson.trim());
+      const items = Array.isArray(parsed) ? parsed : [parsed];
+      let successCount = 0;
+      for (const item of items) {
+        if (!item.name || !item.name.trim()) continue;
+        const res = await fetch(`${apiBaseUrl}/api/products`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            name: item.name,
+            description: item.description || null,
+            image_urls: Array.isArray(item.image_urls) ? item.image_urls : (item.image_url ? [item.image_url] : []),
+            comment: item.comment || null,
+            auto_post_enabled: item.auto_post_enabled !== false
+          }),
+        });
+        if (res.ok) successCount++;
+      }
+      fetchProducts();
+      setBulkJson("");
+      if (successCount > 0) {
+        setSetupMsg({ type: "success", text: lang === "vi" ? `Đã nhập thành công ${successCount} sản phẩm!` : `Imported ${successCount} products!` });
+      } else {
+        setSetupMsg({ type: "error", text: lang === "vi" ? "Không nhập được sản phẩm nào." : "Failed to import products." });
+      }
+    } catch (e) {
+      console.error(e);
+      setSetupMsg({ type: "error", text: lang === "vi" ? "JSON không hợp lệ." : "Invalid JSON format." });
+    } finally {
+      setBulkSubmitting(false);
+    }
+  };
+
   const handleToggleProduct = async (product: ProductItem) => {
     if (!token) return;
     try {
@@ -564,8 +672,20 @@ export default function AutoPostPage() {
     <div className={`min-h-screen flex ${theme === "dark" ? "bg-[#08080c] text-zinc-100" : "bg-gray-50 text-gray-900"}`}>
       <Sidebar
         currentPath="/autopost"
-        activeTab={activeTab === "topic_setup" ? "setup" : activeTab === "manage" ? "list" : "automation"}
-        setActiveTab={(tab) => setActiveTab(sidebarTabMap[tab] || "topic_setup")}
+        activeTab={
+          activeTab === "topic_setup" ? "setup" :
+          activeTab === "manage" ? "list" :
+          activeTab === "product_setup" ? "automation" : "product_list"
+        }
+        setActiveTab={(tab) => {
+          const map: Record<string, "topic_setup" | "manage" | "product_setup" | "product_list"> = {
+            setup: "topic_setup",
+            list: "manage",
+            automation: "product_setup",
+            product_list: "product_list"
+          };
+          setActiveTab(map[tab] || "topic_setup");
+        }}
         user={user}
         lang={lang}
         toggleLanguage={toggleLanguage}
@@ -592,20 +712,20 @@ export default function AutoPostPage() {
               </div>
             </div>
 
-            {/* Tab Switcher (mobile) */}
-            <div className="flex lg:hidden gap-1">
+            {/* Tab Switcher */}
+            <div className="flex flex-wrap gap-1.5 bg-[#09090b]/40 border border-zinc-800/40 p-1 rounded-xl shadow-inner">
               {[
                 { key: "topic_setup" as const, icon: <Sparkles className="w-4 h-4" />, label: lang === "vi" ? "Chủ đề" : "Topics" },
                 { key: "manage" as const, icon: <List className="w-4 h-4" />, label: lang === "vi" ? "Quản lý" : "Manage" },
-                { key: "product_setup" as const, icon: <Package className="w-4 h-4" />, label: lang === "vi" ? "Sản phẩm" : "Products" },
-                { key: "product_list" as const, icon: <FileText className="w-4 h-4" />, label: lang === "vi" ? "DS SP" : "List" },
+                { key: "product_setup" as const, icon: <Package className="w-4 h-4" />, label: lang === "vi" ? "Thêm sản phẩm" : "Add Product" },
+                { key: "product_list" as const, icon: <FileText className="w-4 h-4" />, label: lang === "vi" ? "Danh sách sản phẩm" : "Product List" },
               ].map(t => (
                 <button
                   key={t.key}
                   onClick={() => setActiveTab(t.key)}
-                  className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${activeTab === t.key
+                  className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${activeTab === t.key
                     ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
-                    : theme === "dark" ? "text-zinc-400 hover:bg-zinc-900" : "text-gray-500 hover:bg-gray-100"
+                    : theme === "dark" ? "text-zinc-400 hover:bg-zinc-900/60" : "text-gray-500 hover:bg-gray-150"
                   }`}
                 >
                   <span className="flex items-center gap-1.5">{t.icon}{t.label}</span>
@@ -1073,6 +1193,63 @@ export default function AutoPostPage() {
                       <span className="flex items-center justify-center gap-2">
                         <Package className="w-5 h-5" />
                         {lang === "vi" ? "Thêm sản phẩm" : "Add Product"}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              </SectionCard>
+
+              {/* Nhập sản phẩm hàng loạt / Seeder */}
+              <SectionCard title={lang === "vi" ? "Nhập sản phẩm nhanh (Hàng loạt / Demo)" : "Bulk Import & Demo Seeder"} theme={theme}>
+                <div className="space-y-4">
+                  <button
+                    onClick={handleSeedMockProducts}
+                    disabled={bulkSubmitting}
+                    className={`w-full py-3 rounded-2xl flex items-center justify-center gap-2 text-xs font-bold transition-all border cursor-pointer ${
+                      theme === "dark"
+                        ? "border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                        : "border-emerald-300 text-emerald-600 hover:bg-emerald-50"
+                    }`}
+                  >
+                    {bulkSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    {lang === "vi" ? "Tự động tạo 5 sản phẩm mẫu (Khoá học & Tài khoản AI)" : "Auto Seed 5 Demo AI Products & Accounts"}
+                  </button>
+
+                  <div className="flex items-center">
+                    <div className="flex-1 border-t border-zinc-850/40"></div>
+                    <span className="px-3 text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{lang === "vi" ? "Hoặc nhập JSON" : "Or Import JSON"}</span>
+                    <div className="flex-1 border-t border-zinc-850/40"></div>
+                  </div>
+
+                  <div>
+                    <label className={labelCls(theme)}>{lang === "vi" ? "Mảng JSON sản phẩm" : "JSON Array of Products"}</label>
+                    <textarea
+                      value={bulkJson}
+                      onChange={e => setBulkJson(e.target.value)}
+                      rows={4}
+                      className={`${inputCls(theme)} font-mono text-[11px]`}
+                      placeholder={`[
+  {
+    "name": "Canva Pro 1 Năm",
+    "description": "Gia hạn chính chủ Canva Pro...",
+    "image_urls": ["https://images.unsplash.com/..."],
+    "comment": "Mua ngay..."
+  }
+]`}
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleBulkJsonImport}
+                    disabled={bulkSubmitting || !bulkJson.trim()}
+                    className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold transition-all cursor-pointer disabled:opacity-50 active:scale-[0.98]"
+                  >
+                    {bulkSubmitting ? (
+                      <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                    ) : (
+                      <span className="flex items-center justify-center gap-2">
+                        <FileText className="w-4 h-4" />
+                        {lang === "vi" ? "Nhập danh sách sản phẩm" : "Import Product List"}
                       </span>
                     )}
                   </button>

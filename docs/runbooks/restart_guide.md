@@ -1,6 +1,6 @@
 # 🔄 Hướng Dẫn Khởi Động Lại Hệ Thống Zeflyo (Local Restart Guide)
 
-Tài liệu này hướng dẫn quy trình khởi động lại toàn bộ các dịch vụ của dự án Zeflyo sau khi tắt máy, đồng thời hướng dẫn cập nhật cấu hình Webhook URL từ Meta Developers khi Ngrok cấp IP/Domain mới.
+Tài liệu này hướng dẫn quy trình khởi động lại toàn bộ các dịch vụ của dự án Zeflyo sau khi tắt máy, đồng thời hướng dẫn cấu hình Webhook URL từ Meta Developers sử dụng Localtunnel với tên miền cố định.
 
 ---
 
@@ -30,42 +30,42 @@ Mở một cửa sổ Terminal mới tại thư mục frontend (`r:\_Projects\Eu
 npm run dev
 ```
 
-*   **URL truy cập local:** [http://localhost:3000](http://localhost:3000)
+> ⚠️ **LƯU Ý QUAN TRỌNG VỀ ĐỊA CHỈ TRUY CẬP:**
+> Mặc dù Next.js khởi chạy ở cổng `3000`, bạn **luôn luôn phải truy cập** thông qua cổng 80 của Nginx: **`http://localhost`** (hoặc `http://127.0.0.1`).
+> **Tại sao?** Nginx đóng vai trò là cổng định tuyến hợp nhất. Truy cập trực tiếp qua cổng 3000 sẽ gây ra lỗi **CORS** và lỗi **404** khi xác thực kênh truyền WebSocket riêng tư (`POST /broadcasting/auth`).
 
 ---
 
-### Bước 3: Mở cổng kết nối Ngrok
-Mở một cửa sổ Terminal thứ ba tại thư mục dự án và khởi chạy Ngrok để tạo cổng kết nối HTTPS công khai cho Webhook của Meta:
+### Bước 3: Mở cổng kết nối Localtunnel (Với tên miền cố định)
+Mở một cửa sổ Terminal thứ ba tại thư mục dự án và khởi chạy Localtunnel để tạo cổng kết nối HTTPS công khai cho Webhook của Meta. 
+
+Để giữ **cố định URL** và không phải cập nhật lại trên Meta Developers mỗi lần tắt/bật lại, hãy dùng tham số `--subdomain`:
 
 ```bash
-ngrok http 80
+npx localtunnel --port 80 --subdomain zeflyo-dev
 ```
 
-> 💡 **Mẹo nhỏ:** Nếu bạn không muốn URL Ngrok bị thay đổi ngẫu nhiên mỗi lần khởi động, bạn có thể đăng ký 1 Static Domain hoàn toàn miễn phí trên Dashboard của trang chủ [ngrok.com](https://ngrok.com/), sau đó khởi chạy với lệnh:
-> ```bash
-> ngrok http --url=YOUR_DOMAIN.ngrok-free.app 80
-> ```
+> 💡 **Giải thích:** Câu lệnh này sẽ yêu cầu tên miền cố định là **`https://zeflyo-dev.loca.lt`**. Nếu tên miền này trùng hoặc chưa khả dụng, bạn có thể thay `zeflyo-dev` bằng một chuỗi duy nhất bất kỳ (ví dụ: `zeflyo-shop-hoang`).
 
 ---
 
-### Bước 4: Cập nhật Webhook URL trên Meta Developers
-Do mỗi lần chạy Ngrok (bản Free) sẽ nhận được một địa chỉ HTTPS ngẫu nhiên mới (ví dụ: `https://abcd-12-34.ngrok-free.app`), bạn cần cập nhật địa chỉ này với Facebook:
+### Bước 4: Cấu hình Webhook URL trên Meta Developers
+Do chúng ta đã cố định tên miền thông qua Localtunnel, bạn chỉ cần cấu hình trên Facebook **một lần duy nhất**:
 
-1.  Copy địa chỉ HTTPS mới từ màn hình Terminal chạy Ngrok.
-2.  Đăng nhập vào [Meta Developers Console](https://developers.facebook.com/).
-3.  Chọn ứng dụng của bạn $\rightarrow$ Trong danh mục menu bên trái, tìm đến **Webhooks**.
-4.  Chọn loại Event là **Page** $\rightarrow$ Bấm nút **Edit Subscription**.
-5.  Cập nhật cấu hình:
-    *   **Callback URL:** `<Địa chỉ HTTPS mới của Ngrok>/api/webhook/facebook`  
-        *(Ví dụ: `https://abcd-12-34.ngrok-free.app/api/webhook/facebook`)*
-    *   **Verify Token:** `zeflyo_webhook_token_2026` (Mã xác thực đã cấu hình trong `.env`).
-6.  Bấm **Verify and Save** để lưu lại cấu hình bắt tay mới.
+1.  Đăng nhập vào [Meta Developers Console](https://developers.facebook.com/).
+2.  Chọn ứng dụng của bạn $\rightarrow$ Trong danh mục menu bên trái, tìm đến **Webhooks**.
+3.  Chọn loại Event là **Page** $\rightarrow$ Bấm nút **Edit Subscription**.
+4.  Cấu hình chi tiết:
+    *   **Callback URL:** `https://zeflyo-dev.loca.lt/api/webhook/facebook`  
+        *(Hoặc thay bằng subdomain bạn đã chọn ở Bước 3)*
+    *   **Verify Token:** `zeflyo_webhook_token_2026` *(Mã xác thực đã cấu hình trong file `.env` của backend).*
+5.  Bấm **Verify and Save** để xác thực kết nối.
 
 ---
 
 ## ⚠️ Lưu ý quan trọng khi kiểm thử (Local Testing Tips)
 
-*   **API Base URL trên UI:** Khi truy cập giao diện Next.js tại `http://localhost:3000`, trong phần cài đặt kết nối server (biểu tượng bánh răng ⚙️ ở trang đăng nhập), hãy giữ nguyên địa chỉ API là `http://localhost`. Không cần sửa thành địa chỉ Ngrok, vì trình duyệt của bạn có thể kết nối trực tiếp đến Nginx local qua mạng máy tính giúp tăng tốc độ truyền tải tối đa.
+*   **API Base URL trên UI:** Khi truy cập trang đăng nhập tại `http://localhost`, tại bảng cấu hình API (biểu tượng bánh răng ⚙️), hãy nhập **`http://localhost`** làm địa chỉ API. Tuyệt đối không điền cổng `3000` hay địa chỉ localtunnel tại đây (trừ khi bạn đang truy cập từ xa).
 *   **Vận hành & Xuất bản bài đăng đã lên lịch (Post Scheduler):**
     Để quét và xuất bản các bài viết đã đến giờ hẹn lịch từ hàng đợi lên các Fanpage Facebook, hãy chạy lệnh Artisan sau tại thư mục gốc của dự án:
     ```bash

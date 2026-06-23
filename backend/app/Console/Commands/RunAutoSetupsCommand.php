@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 class RunAutoSetupsCommand extends Command
 {
-    protected $signature = 'autosetups:run';
+    protected $signature = 'autosetups:run {--force}';
     protected $description = 'Check and dispatch auto-setup jobs for campaigns due to publish.';
 
     public function handle(): int
@@ -34,7 +34,7 @@ class RunAutoSetupsCommand extends Command
         $dispatched = 0;
 
         foreach ($setups as $setup) {
-            if (!$this->isScheduleMatch($setup, $currentTime, $currentDayOfWeek, $currentDate)) {
+            if (!$this->option('force') && !$this->isScheduleMatch($setup, $currentTime, $currentDayOfWeek, $currentDate)) {
                 continue;
             }
 

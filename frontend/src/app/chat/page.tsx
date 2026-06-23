@@ -346,8 +346,9 @@ export default function ChatHub() {
           const data = await res.json();
           const incoming: Interaction[] = data.data || [];
           setMessages(prev => {
-            const existingIds = new Set(prev.map(m => m.fb_item_id));
-            const newMsgs = incoming.filter(m => !existingIds.has(m.fb_item_id));
+            const existingIds = new Set(prev.map(m => m.id));
+            const existingFbIds = new Set(prev.map(m => m.fb_item_id));
+            const newMsgs = incoming.filter(m => !existingIds.has(m.id) && !existingFbIds.has(m.fb_item_id));
             if (newMsgs.length === 0) return prev;
             return [...prev, ...newMsgs];
           });
@@ -558,7 +559,7 @@ export default function ChatHub() {
     // 1. Update active chat messages timeline in real-time
     if (selectedConv && selectedConv.customer_id === interaction.customer_id) {
       setMessages((prev) => {
-        if (prev.some((msg) => msg.fb_item_id === interaction.fb_item_id)) {
+        if (prev.some((msg) => msg.id === interaction.id || msg.fb_item_id === interaction.fb_item_id)) {
           return prev;
         }
         return [...prev, interaction];
@@ -699,7 +700,12 @@ export default function ChatHub() {
       if (response.ok) {
         const data = await response.json();
         const interaction: Interaction = data.interaction;
-        setMessages((prev) => [...prev, interaction]);
+        setMessages((prev) => {
+          if (prev.some((msg) => msg.id === interaction.id || msg.fb_item_id === interaction.fb_item_id)) {
+            return prev;
+          }
+          return [...prev, interaction];
+        });
         
         setConversations((prev) => 
           prev.map((c) => {

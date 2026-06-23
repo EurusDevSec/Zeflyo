@@ -106,6 +106,7 @@ export default function PostScheduler() {
 
   // Statuses
   const [loading, setLoading] = useState<boolean>(true);
+  const [uploadingImage, setUploadingImage] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -370,6 +371,56 @@ export default function PostScheduler() {
 
   const handleImageUrlChange = (val: string) => {
     setQueue(prev => prev.map((item, idx) => idx === activeQueueIndex ? { ...item, imageUrl: val } : item));
+  };
+
+  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (token && token.startsWith("mock_")) {
+      setUploadingImage(true);
+      await new Promise(resolve => setTimeout(resolve, 800));
+      const mockImages = [
+        "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80"
+      ];
+      const randomImg = mockImages[Math.floor(Math.random() * mockImages.length)];
+      handleImageUrlChange(randomImg);
+      showNotification("success", "Đã tải hình ảnh lên hàng chờ (Mẫu)!");
+      setUploadingImage(false);
+      return;
+    }
+
+    if (!token) return;
+    setUploadingImage(true);
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/upload`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+        body: formData,
+      });
+
+      if (res.ok) {
+        const d = await res.json();
+        handleImageUrlChange(d.url);
+        showNotification("success", "Tải hình ảnh lên thành công!");
+      } else {
+        const err = await res.json();
+        showNotification("error", err.error || "Tải ảnh lên thất bại");
+      }
+    } catch (err) {
+      showNotification("error", "Lỗi kết nối khi tải ảnh");
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   // Excel Mock Actions
@@ -904,7 +955,12 @@ export default function PostScheduler() {
                       />
                       
                       {/* Media preview */}
-                      {activePost.imageUrl ? (
+                      {uploadingImage ? (
+                        <div className="border-2 border-dashed border-zinc-850 rounded-xl p-8 flex flex-col items-center justify-center gap-3 bg-zinc-950/20">
+                          <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                          <p className="text-xs text-zinc-400">Đang tải ảnh từ thiết bị lên...</p>
+                        </div>
+                      ) : activePost.imageUrl ? (
                         <div className="relative rounded-xl overflow-hidden border border-zinc-850 bg-zinc-950/60 p-2 animate-fade-in">
                           <img 
                             src={activePost.imageUrl} 
@@ -921,17 +977,15 @@ export default function PostScheduler() {
                       ) : (
                         <div 
                           className="border-2 border-dashed border-zinc-850 rounded-xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer bg-zinc-950/20 hover:bg-zinc-900/10 hover:border-zinc-800 transition-all"
-                          onClick={() => {
-                            const mockImages = [
-                              "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=600&q=80",
-                              "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
-                              "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80"
-                            ];
-                            const randomImg = mockImages[Math.floor(Math.random() * mockImages.length)];
-                            handleImageUrlChange(randomImg);
-                            showNotification("success", "Đã tải hình ảnh lên hàng chờ (Mẫu)!");
-                          }}
+                          onClick={() => document.getElementById("scheduler-file-upload")?.click()}
                         >
+                          <input
+                            type="file"
+                            id="scheduler-file-upload"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleUploadImage}
+                          />
                           <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center border border-zinc-850">
                             <ImageIcon className="w-5 h-5 text-zinc-500" />
                           </div>

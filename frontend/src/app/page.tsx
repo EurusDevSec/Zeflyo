@@ -186,7 +186,14 @@ export default function App() {
     const savedTheme = localStorage.getItem("zeflyo_theme") || "dark";
 
     if (savedToken) setToken(savedToken);
-    if (savedUser) setUser(JSON.parse(savedUser));
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error("Failed to parse saved user:", e);
+        localStorage.removeItem("zeflyo_user");
+      }
+    }
     if (savedApiBase) setApiBaseUrl(savedApiBase);
     if (savedAppId) setAppId(savedAppId);
     if (savedLang === "en" || savedLang === "vi") setLang(savedLang);

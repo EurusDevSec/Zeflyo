@@ -66,11 +66,20 @@ Do mỗi lần chạy Ngrok (bản Free) sẽ nhận được một địa chỉ
 ## ⚠️ Lưu ý quan trọng khi kiểm thử (Local Testing Tips)
 
 *   **API Base URL trên UI:** Khi truy cập giao diện Next.js tại `http://localhost:3000`, trong phần cài đặt kết nối server (biểu tượng bánh răng ⚙️ ở trang đăng nhập), hãy giữ nguyên địa chỉ API là `http://localhost`. Không cần sửa thành địa chỉ Ngrok, vì trình duyệt của bạn có thể kết nối trực tiếp đến Nginx local qua mạng máy tính giúp tăng tốc độ truyền tải tối đa.
-*   **Kiểm tra Logs Docker:** Nếu xảy ra lỗi không nhận được tin nhắn, bạn có thể kiểm tra logs của Queue Worker và Soketi bằng các lệnh:
+*   **Vận hành & Xuất bản bài đăng đã lên lịch (Post Scheduler):**
+    Để quét và xuất bản các bài viết đã đến giờ hẹn lịch từ hàng đợi lên các Fanpage Facebook, hãy chạy lệnh Artisan sau tại thư mục gốc của dự án:
+    ```bash
+    docker compose exec app php artisan posts:publish
+    ```
+    *Mẹo:* Trong môi trường sản xuất (Production), lệnh này được Laravel Scheduler tự động kích hoạt mỗi phút qua cronjob. Trên môi trường phát triển cục bộ (Local), bạn có thể chạy lệnh thủ công ở trên bất kỳ lúc nào để kích hoạt xuất bản bài viết ngay khi vừa đến giờ hẹn.
+*   **Kiểm tra Logs Docker:** Nếu xảy ra lỗi không nhận được tin nhắn hoặc gửi bài viết thất bại, bạn có thể kiểm tra logs của Queue Worker, Web server và Soketi bằng các lệnh:
     ```bash
     # Xem logs của Laravel Queue worker
     docker logs worker_zeflyo --tail=50 -f
     
     # Xem logs của WebSocket server
     docker logs soketi_zeflyo --tail=50 -f
+    
+    # Xem logs của Laravel Octane app
+    docker logs app_zeflyo --tail=50 -f
     ```

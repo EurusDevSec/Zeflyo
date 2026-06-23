@@ -81,10 +81,10 @@ class FacebookAuthController extends Controller
                 // Save or update Fanpage
                 Fanpage::updateOrCreate(
                     [
-                        'user_id' => $user->id,
                         'fb_page_id' => $page['id']
                     ],
                     [
+                        'user_id' => $user->id,
                         'name' => $page['name'],
                         'access_token' => $page['access_token'], // will be auto-encrypted via Eloquent cast
                         'avatar_url' => $page['picture']['data']['url'] ?? null,

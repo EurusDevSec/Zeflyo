@@ -11,6 +11,8 @@ services:
     volumes:
       - ./backend:/var/www/html
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - app
       - soketi

@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 
 use Illuminate\Support\Facades\Schedule;
 Schedule::command('posts:publish')->everyMinute();
+Schedule::command('autosetups:run')->everyMinute();

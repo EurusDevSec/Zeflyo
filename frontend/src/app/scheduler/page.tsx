@@ -97,6 +97,7 @@ export default function PostScheduler() {
   const [scheduleMode, setScheduleMode] = useState<"weekly" | "fixed">("weekly");
   const [scheduleTimes, setScheduleTimes] = useState<string[]>(["08:00"]);
   const [scheduleDays, setScheduleDays] = useState<number[]>([1, 3, 5]); // 1 = Mon, ..., 7 = Sun
+  const [scheduleDate, setScheduleDate] = useState<string>("");
   
   // Extra options
   const [includeContactInfo, setIncludeContactInfo] = useState<boolean>(false);
@@ -129,6 +130,13 @@ export default function PostScheduler() {
     } else {
       document.documentElement.classList.remove("light");
     }
+
+    // Set today's date as default for fixed schedule
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    setScheduleDate(`${year}-${month}-${day}`);
 
     // Initial page load
     if (savedPages) {
@@ -450,14 +458,19 @@ export default function PostScheduler() {
     if (scheduleMode === "weekly") {
       targetDates = calculateTargetDates();
     } else {
-      // Fixed date mode: Schedule starting from tomorrow
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
+      // Fixed date mode: Schedule on the selected date
+      if (!scheduleDate) {
+        showNotification("error", "Vui lòng chọn ngày đăng bài.");
+        setSubmitting(false);
+        return;
+      }
+      
+      const baseDate = new Date(scheduleDate);
       
       // Map times
       scheduleTimes.forEach(time => {
         const [hours, minutes] = time.split(":").map(Number);
-        const slot = new Date(tomorrow);
+        const slot = new Date(baseDate);
         slot.setHours(hours, minutes, 0, 0);
         targetDates.push(slot);
       });
@@ -1103,6 +1116,19 @@ export default function PostScheduler() {
                         <p className="text-[10px] text-amber-500 bg-amber-500/5 px-3 py-2 rounded-lg border border-amber-500/15 flex items-center gap-1">
                           💡 Mẹo: Chế độ lặp lại theo tuần phù hợp cho lịch đăng bài thường xuyên và đều đặn.
                         </p>
+                      )}
+                      
+                      {scheduleMode === "fixed" && (
+                        <div className="flex flex-col gap-2 bg-blue-650/[0.03] border border-blue-500/10 rounded-xl p-3.5 mt-1 animate-fade-in">
+                          <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Ngày đăng bài (Cố định)</label>
+                          <input 
+                            type="date"
+                            value={scheduleDate}
+                            onChange={(e) => setScheduleDate(e.target.value)}
+                            min={new Date().toISOString().split("T")[0]}
+                            className="w-full bg-zinc-950 border border-zinc-850 rounded-xl px-4 py-2.5 text-xs text-zinc-300 outline-none focus:border-blue-500/50"
+                          />
+                        </div>
                       )}
                     </div>
 

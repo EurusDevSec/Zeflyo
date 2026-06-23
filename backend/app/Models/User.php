@@ -47,4 +47,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(ScheduledPost::class);
     }
+
+    public function autoSetups(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AutoSetup::class);
+    }
+
+    public function products(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
 }

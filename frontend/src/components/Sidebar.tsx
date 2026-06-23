@@ -10,7 +10,8 @@ import {
   Sun,
   Moon,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  Wand2
 } from "lucide-react";
 
 interface UserProfile {
@@ -21,7 +22,7 @@ interface UserProfile {
 }
 
 interface SidebarProps {
-  currentPath: "/" | "/scheduler" | "/chat" | "/rules";
+  currentPath: "/" | "/scheduler" | "/chat" | "/rules" | "/autopost";
   activeTab?: "setup" | "list" | "automation";
   setActiveTab?: (tab: "setup" | "list" | "automation") => void;
   user: UserProfile | null;
@@ -135,6 +136,61 @@ export default function Sidebar({
           >
             <Calendar className="w-4.5 h-4.5 text-zinc-500" />
             <span>{lang === "en" ? "Post Scheduler" : "Lên lịch đăng bài"}</span>
+          </a>
+        )}
+
+        {/* Đăng bài tự động AI */}
+        {currentPath === "/autopost" ? (
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between px-3.5 py-3 bg-zinc-900 text-zinc-200 rounded-xl text-xs font-bold tracking-wider uppercase shadow-sm">
+              <span className="flex items-center gap-3">
+                <Wand2 className="w-4.5 h-4.5 text-[#7c3aed]" />
+                <span>{lang === "en" ? "AI Auto-Post" : "Đăng bài tự động AI"}</span>
+              </span>
+              <ChevronDown className="w-4 h-4 text-[#7c3aed]" />
+            </div>
+            {setActiveTab && (
+              <div className="pl-4 mt-1.5 flex flex-col gap-1.5 border-l border-zinc-800 ml-5">
+                <button 
+                  onClick={() => setActiveTab("setup")}
+                  className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "setup" 
+                      ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
+                      : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
+                  }`}
+                >
+                  {lang === "en" ? "Topic Setup" : "Thiết lập từ chủ đề"}
+                </button>
+                <button 
+                  onClick={() => setActiveTab("list")}
+                  className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "list" 
+                      ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
+                      : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
+                  }`}
+                >
+                  {lang === "en" ? "Manage Setups" : "Quản lý lịch đăng"}
+                </button>
+                <button 
+                  onClick={() => setActiveTab("automation")}
+                  className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "automation" 
+                      ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
+                      : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
+                  }`}
+                >
+                  {lang === "en" ? "Products" : "Sản phẩm"}
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <a
+            href="/autopost"
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/30 transition-all text-xs font-bold uppercase tracking-wider"
+          >
+            <Wand2 className="w-4.5 h-4.5 text-zinc-500" />
+            <span>{lang === "en" ? "AI Auto-Post" : "Đăng bài tự động AI"}</span>
           </a>
         )}
 

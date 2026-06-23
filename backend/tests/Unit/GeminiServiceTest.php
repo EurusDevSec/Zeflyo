@@ -19,7 +19,9 @@ class GeminiServiceTest extends TestCase
                 'candidates' => [
                     [
                         'content' => [
-                            ['text' => 'Xin chào, đây là trả lời tự động.'],
+                            'parts' => [
+                                ['text' => 'Xin chào, đây là trả lời tự động.'],
+                            ],
                         ],
                     ],
                 ],

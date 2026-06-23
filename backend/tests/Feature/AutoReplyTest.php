@@ -62,7 +62,11 @@ class AutoReplyTest extends TestCase
         Http::fake([
             'https://generativelanguage.googleapis.com/*' => Http::response([
                 'candidates' => [[
-                    'content' => [['text' => 'Đây là câu trả lời AI.']],
+                    'content' => [
+                        'parts' => [
+                            ['text' => 'Đây là câu trả lời AI.'],
+                        ],
+                    ],
                 ]],
             ], 200),
             'https://graph.facebook.com/*' => Http::response(['recipient_id' => '321'], 200),

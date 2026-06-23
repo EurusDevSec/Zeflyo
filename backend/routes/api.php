@@ -35,5 +35,31 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Auto-Reply Rules APIs
     Route::apiResource('/auto-reply-rules', \App\Http\Controllers\AutoReplyRuleController::class);
+
+    // Auto-Setup (Campaign) APIs
+    Route::get('/auto-setups', [\App\Http\Controllers\AutoSetupController::class, 'index']);
+    Route::post('/auto-setups', [\App\Http\Controllers\AutoSetupController::class, 'store']);
+    Route::get('/auto-setups/{id}', [\App\Http\Controllers\AutoSetupController::class, 'show']);
+    Route::put('/auto-setups/{id}', [\App\Http\Controllers\AutoSetupController::class, 'update']);
+    Route::delete('/auto-setups/{id}', [\App\Http\Controllers\AutoSetupController::class, 'destroy']);
+    Route::post('/auto-setups/{id}/toggle', [\App\Http\Controllers\AutoSetupController::class, 'toggle']);
+
+    // Topic APIs (under auto-setups)
+    Route::get('/auto-setups/{id}/topics', [\App\Http\Controllers\TopicController::class, 'index']);
+    Route::post('/auto-setups/{id}/topics', [\App\Http\Controllers\TopicController::class, 'store']);
+    Route::post('/auto-setups/{id}/generate-topics', [\App\Http\Controllers\TopicController::class, 'generateTopics']);
+    Route::delete('/topics/{id}', [\App\Http\Controllers\TopicController::class, 'destroy']);
+    Route::put('/topics/{id}', [\App\Http\Controllers\TopicController::class, 'update']);
+    Route::post('/topics/{id}/approve', [\App\Http\Controllers\TopicController::class, 'approve']);
+
+    // Product APIs
+    Route::get('/products', [\App\Http\Controllers\ProductController::class, 'index']);
+    Route::post('/products', [\App\Http\Controllers\ProductController::class, 'store']);
+    Route::put('/products/{id}', [\App\Http\Controllers\ProductController::class, 'update']);
+    Route::delete('/products/{id}', [\App\Http\Controllers\ProductController::class, 'destroy']);
+    Route::post('/products/reorder', [\App\Http\Controllers\ProductController::class, 'reorder']);
+
+    // General Upload API
+    Route::post('/upload', [\App\Http\Controllers\UploadController::class, 'upload']);
 });
 

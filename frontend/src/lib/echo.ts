@@ -19,8 +19,11 @@ export const getEchoInstance = (token: string, apiBaseUrl: string) => {
   }
 
   const isHttps = scheme === 'https';
-  // Soketi always runs on port 6001 (not the same as nginx port 80/443)
-  const wsPort = 6001;
+  // Soketi always runs on port 6001 for local development, but when accessing via ngrok,
+  // we must route through Nginx proxy on standard ports (80/443).
+  const isLocal = host === 'localhost' || host === '127.0.0.1';
+  const wsPort = isLocal ? 6001 : 80;
+  const wssPort = isLocal ? 6001 : 443;
 
   return new Echo({
     broadcaster: 'pusher',
@@ -28,7 +31,7 @@ export const getEchoInstance = (token: string, apiBaseUrl: string) => {
     cluster: 'mt1',
     wsHost: host,
     wsPort: wsPort,
-    wssPort: wsPort,
+    wssPort: wssPort,
     forceTLS: isHttps,
     disableStats: true,
     enabledTransports: ['ws', 'wss'],

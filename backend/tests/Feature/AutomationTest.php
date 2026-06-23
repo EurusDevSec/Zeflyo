@@ -137,7 +137,9 @@ class AutomationTest extends TestCase
                 'candidates' => [
                     [
                         'content' => [
-                            ['text' => 'Đây là bài viết mẫu tạo từ AI.'],
+                            'parts' => [
+                                ['text' => 'Đây là bài viết mẫu tạo từ AI.'],
+                            ],
                         ],
                     ],
                 ],

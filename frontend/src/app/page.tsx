@@ -45,7 +45,7 @@ function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
 
 interface Fanpage {
   id: number;
-  user_id: number;
+  user_id: string | number;
   fb_page_id: string;
   name: string;
   avatar_url: string | null;
@@ -55,7 +55,7 @@ interface Fanpage {
 }
 
 interface UserProfile {
-  id: number;
+  id: string | number;
   name: string;
   email: string;
   avatar: string | null;
@@ -377,16 +377,16 @@ export default function App() {
 
     const mockToken = "mock_token_" + Math.random().toString(36).substring(2);
     const mockUser: UserProfile = {
-      id: 99,
+      id: "n0YkxX26RezeRFcCHy2ow4LtSENl2",
       name: "Đức Tiến",
-      email: "ductien@zeflyo.io",
+      email: "demo@zeflyo.io",
       avatar: null
     };
 
     const mockPages: Fanpage[] = [
       {
         id: 1,
-        user_id: 99,
+        user_id: "n0YkxX26RezeRFcCHy2ow4LtSENl2",
         fb_page_id: "109849204982312",
         name: "Zeflyo Fashion Store",
         avatar_url: null,
@@ -396,7 +396,7 @@ export default function App() {
       },
       {
         id: 2,
-        user_id: 99,
+        user_id: "n0YkxX26RezeRFcCHy2ow4LtSENl2",
         fb_page_id: "304958230495823",
         name: "Zeflyo Food & Beverage",
         avatar_url: null,
@@ -406,7 +406,7 @@ export default function App() {
       },
       {
         id: 3,
-        user_id: 99,
+        user_id: "n0YkxX26RezeRFcCHy2ow4LtSENl2",
         fb_page_id: "495829348572934",
         name: "Tech Support Portal",
         avatar_url: null,

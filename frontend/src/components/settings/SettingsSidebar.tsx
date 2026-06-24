@@ -9,7 +9,8 @@ import {
   BookOpen, 
   ShieldCheck, 
   Globe, 
-  MessageSquare 
+  MessageSquare,
+  Receipt
 } from "lucide-react";
 
 interface MenuItem {
@@ -44,6 +45,7 @@ export default function SettingsSidebar() {
     { id: "general", labelVi: "Tổng quan", labelEn: "General", icon: User, href: "/settings/general" },
     { id: "pricing", labelVi: "Bảng giá", labelEn: "Pricing", icon: CreditCard, href: "/settings/pricing" },
     { id: "support", labelVi: "Hỗ trợ", labelEn: "Support", icon: HelpCircle, href: "/settings/support" },
+    { id: "billing", labelVi: "Lịch sử mua hàng", labelEn: "Purchase History", icon: Receipt, href: "/settings/billing" },
     { id: "guide", labelVi: "Hướng dẫn", labelEn: "Guide", icon: BookOpen, href: "/settings/guide" },
     { id: "policy", labelVi: "Chính sách", labelEn: "Policy", icon: ShieldCheck, href: "/settings/policy" },
     { id: "language", labelVi: "Ngôn ngữ", labelEn: "Language", icon: Globe, href: "/settings/language" },

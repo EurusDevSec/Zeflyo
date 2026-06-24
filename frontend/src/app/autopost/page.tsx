@@ -62,7 +62,7 @@ interface ProductItem {
 }
 
 interface UserProfile {
-  id: number;
+  id: string | number;
   name: string;
   email: string;
   avatar: string | null;

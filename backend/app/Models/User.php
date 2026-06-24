@@ -12,12 +12,33 @@ use Illuminate\Notifications\Notifiable;
 
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'display_name', 'avatar_url', 'timezone'])]
+#[Fillable(['name', 'email', 'password', 'display_name', 'avatar_url', 'timezone', 'credits', 'subscription_plan', 'subscription_expires_at', 'phone', 'referral_phone', 'uid'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+
+    protected static function booted()
+    {
+        static::creating(function ($user) {
+            if (empty($user->uid)) {
+                $user->uid = \Illuminate\Support\Str::random(28);
+            }
+        });
+    }
+
+    public function getUidAttribute($value)
+    {
+        if (empty($value)) {
+            $value = \Illuminate\Support\Str::random(28);
+            $this->attributes['uid'] = $value;
+            if ($this->exists) {
+                $this->save();
+            }
+        }
+        return $value;
+    }
 
     /**
      * Get the attributes that should be cast.

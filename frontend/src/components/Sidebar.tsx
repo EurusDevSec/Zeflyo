@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 interface UserProfile {
-  id: number;
+  id: string | number;
   name: string;
   email: string;
   avatar?: string | null;
@@ -162,7 +162,7 @@ export default function Sidebar({
             {lang === "en" ? "CREDITS LEFT" : "TỔNG ĐIỂM"}
           </span>
           <span className="text-3xl font-black text-emerald-400 drop-shadow-[0_0_12px_rgba(52,211,153,0.2)]">
-            200
+            {user?.credits !== undefined ? user.credits : 0}
           </span>
         </div>
       </div>
@@ -362,8 +362,13 @@ export default function Sidebar({
                 )}
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-xs text-zinc-200 font-bold truncate block">
+                <span className="text-xs text-zinc-200 font-bold truncate block flex items-center gap-1.5">
                   {user.display_name || user.name}
+                  {user.subscription_plan && user.subscription_plan !== "free" && (
+                    <span className="bg-[#6C63FF]/20 border border-[#6C63FF]/30 text-[#8b5cf6] text-[8px] px-1 rounded font-black uppercase tracking-wider">
+                      {user.subscription_plan}
+                    </span>
+                  )}
                 </span>
                 <span className="text-[10px] text-zinc-500 truncate block">
                   {user.email || "user@zeflyo.io"}

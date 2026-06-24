@@ -97,7 +97,7 @@ class FacebookAuthController extends Controller
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([
-            'user' => $user,
+            'user' => $this->formatUser($user),
             'token' => $token,
             'message' => 'Login successful',
         ]);
@@ -106,7 +106,7 @@ class FacebookAuthController extends Controller
     public function demoLogin(Request $request)
     {
         $user = User::firstOrCreate(
-            ['email' => 'demo@zeflyo.io'],
+            ['email' => 'admin@zeflyo.io'],
             [
                 'name' => 'Demo User',
                 'avatar' => null,
@@ -128,9 +128,26 @@ class FacebookAuthController extends Controller
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([
-            'user' => $user,
+            'user' => $this->formatUser($user),
             'token' => $token,
             'message' => 'Demo Login successful',
         ]);
+    }
+
+    protected function formatUser($user)
+    {
+        return [
+            'id' => $user->uid ?? $user->id,
+            'name' => $user->name,
+            'display_name' => $user->display_name,
+            'email' => $user->email,
+            'avatar_url' => $user->avatar_url ?? $user->avatar,
+            'timezone' => $user->timezone,
+            'credits' => $user->credits,
+            'subscription_plan' => $user->subscription_plan,
+            'subscription_expires_at' => $user->subscription_expires_at,
+            'phone' => $user->phone,
+            'referral_phone' => $user->referral_phone,
+        ];
     }
 }

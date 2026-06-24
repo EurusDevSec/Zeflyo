@@ -12,6 +12,7 @@ Route::post('/auth/demo', [FacebookAuthController::class, 'demoLogin']);
 // Facebook Webhook endpoints (Publicly accessible by Meta)
 Route::get('/webhook/facebook', [FacebookWebhookController::class, 'verify']);
 Route::post('/webhook/facebook', [FacebookWebhookController::class, 'receive']);
+Route::post('/webhook/sepay', [\App\Http\Controllers\SubscriptionController::class, 'handleSePayWebhook']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -29,6 +30,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Subscription & Plans APIs
     Route::get('/plans', [\App\Http\Controllers\SubscriptionController::class, 'getPlans']);
     Route::get('/user/subscription', [\App\Http\Controllers\SubscriptionController::class, 'getSubscription']);
+    Route::post('/payments/create', [\App\Http\Controllers\SubscriptionController::class, 'createPendingPayment']);
+    Route::post('/payments/{id}/cancel', [\App\Http\Controllers\SubscriptionController::class, 'cancelPendingPayment']);
+    Route::post('/user/subscription/cancel', [\App\Http\Controllers\SubscriptionController::class, 'cancelSubscription']);
+    Route::get('/user/payments', [\App\Http\Controllers\SubscriptionController::class, 'getUserPayments']);
 
     Route::get('/fanpages', [FanpageController::class, 'index']);
     Route::post('/fanpages/{fanpage}/toggle', [FanpageController::class, 'toggleActive']);

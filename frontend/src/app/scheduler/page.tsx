@@ -35,7 +35,7 @@ import {
 
 interface Fanpage {
   id: number;
-  user_id: number;
+  user_id: string | number;
   fb_page_id: string;
   name: string;
   avatar_url: string | null;
@@ -44,7 +44,7 @@ interface Fanpage {
 
 interface ScheduledPost {
   id: number;
-  user_id: number;
+  user_id: string | number;
   fanpage_ids: number[];
   content: string;
   image_url: string | null;
@@ -69,7 +69,7 @@ export default function PostScheduler() {
   const [activeTab, setActiveTab] = useState<"setup" | "list" | "automation">("setup");
   
   interface UserProfile {
-    id: number;
+    id: string | number;
     name: string;
     email: string;
     avatar: string | null;

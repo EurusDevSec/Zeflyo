@@ -3,14 +3,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
   Search, 
-  BookOpen, 
   HelpCircle, 
   AlertTriangle, 
-  Play, 
   ArrowUp,
-  AlertOctagon,
-  Video,
-  X
+  AlertOctagon
 } from "lucide-react";
 
 interface GuideChapter {
@@ -19,7 +15,6 @@ interface GuideChapter {
   titleEn: string;
   icon: string;
   content: {
-    videoUrl?: string;
     stepsVi: string[];
     stepsEn: string[];
     callouts: { type: "tip" | "warning" | "danger"; textVi: string; textEn: string }[];
@@ -30,7 +25,6 @@ export default function GuidePage() {
   const [lang, setLang] = useState<"en" | "vi">("vi");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeChapter, setActiveChapter] = useState("quickstart");
-  const [showVideoModal, setShowVideoModal] = useState<string | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const contentRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -94,7 +88,6 @@ export default function GuidePage() {
       titleEn: "🚀 Quick Start",
       icon: "🚀",
       content: {
-        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
         stepsVi: [
           "Đăng ký tài khoản và đăng nhập qua mạng xã hội Facebook OAuth.",
           "Cấu hình đường dẫn kết nối API Gateway của bạn ở phần Cài đặt.",
@@ -349,44 +342,7 @@ export default function GuidePage() {
                 </h3>
               </div>
 
-              {/* Video Button */}
-              {ch.content.videoUrl && (
-                <div className="relative rounded-2xl overflow-hidden border border-white/5 bg-zinc-950/40 p-4 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-red-600/10 border border-red-600/20 flex items-center justify-center text-red-500">
-                      <Video className="w-5 h-5" />
-                    </div>
-                    <div className="text-left">
-                      <span className="text-xs font-bold text-zinc-250 block">
-                        {lang === "en" ? "Watch Video Guide" : "Video hướng dẫn chi tiết"}
-                      </span>
-                      <span className="text-[10px] text-zinc-550 block mt-0.5">
-                        {lang === "en" ? "See this module running in 2 mins." : "Trực quan hóa cách vận hành trong 2 phút."}
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowVideoModal(ch.content.videoUrl || null)}
-                    className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg bg-red-600 hover:bg-red-500 text-white text-[10px] font-bold transition-all shadow-md shadow-red-500/10 active:scale-95 cursor-pointer"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    {lang === "en" ? "Watch Now" : "Xem video →"}
-                  </button>
-                </div>
-              )}
 
-              {/* Screenshot placeholder */}
-              <div className="rounded-2xl border border-white/5 overflow-hidden bg-zinc-950/50 flex flex-col gap-2 p-2">
-                <div className="aspect-[16/9] w-full bg-zinc-900/60 rounded-xl flex flex-col items-center justify-center gap-2 border border-white/5">
-                  <BookOpen className="w-8 h-8 text-zinc-700 animate-pulse" />
-                  <span className="text-[10px] text-zinc-600 font-mono select-none">
-                    {lang === "en" ? `[IMAGE: screenshot_${ch.id}.png]` : `[ẢNH: giao_dien_${ch.id}.png]`}
-                  </span>
-                </div>
-                <span className="text-[10px] text-zinc-500 text-center italic py-1">
-                  {lang === "en" ? `Figure: Screenshot illustrating ${ch.titleEn} functionality.` : `Hình: Ảnh minh họa chức năng ${ch.titleVi}.`}
-                </span>
-              </div>
 
               {/* Step-by-Step guides */}
               <div className="flex flex-col gap-3">
@@ -446,29 +402,7 @@ export default function GuidePage() {
 
       </div>
 
-      {/* Video Iframe Modal */}
-      {showVideoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="glass-panel p-3 rounded-3xl border border-white/5 w-full max-w-3xl shadow-2xl relative">
-            <button
-              onClick={() => setShowVideoModal(null)}
-              className="absolute -top-12 right-0 p-2 rounded-xl bg-zinc-900 border border-white/5 text-zinc-450 hover:text-white"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="aspect-[16/9] w-full rounded-2xl overflow-hidden border border-white/5">
-              <iframe
-                src={showVideoModal}
-                title="YouTube Video Player"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                className="w-full h-full"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Floating Scroll Top */}
       {showScrollTop && (

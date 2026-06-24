@@ -31,7 +31,7 @@ import {
 
 interface Fanpage {
   id: number;
-  user_id: number;
+  user_id: string | number;
   fb_page_id: string;
   name: string;
   avatar_url: string | null;
@@ -56,7 +56,7 @@ export default function AutoReplyRules() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   
   interface UserProfile {
-    id: number;
+    id: string | number;
     name: string;
     email: string;
     avatar: string | null;

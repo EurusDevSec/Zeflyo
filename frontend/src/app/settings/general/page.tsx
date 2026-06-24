@@ -17,7 +17,7 @@ import {
 
 interface Fanpage {
   id: number;
-  user_id: number;
+  user_id: string | number;
   fb_page_id: string;
   name: string;
   avatar_url: string | null;
@@ -33,6 +33,8 @@ export default function GeneralSettingsPage() {
   // Form states
   const [displayName, setDisplayName] = useState("");
   const [timezone, setTimezone] = useState("Asia/Ho_Chi_Minh");
+  const [phone, setPhone] = useState("");
+  const [referralPhone, setReferralPhone] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -111,6 +113,8 @@ export default function GeneralSettingsPage() {
         setUser(u);
         setDisplayName(u.display_name || u.name || "");
         setTimezone(u.timezone || "Asia/Ho_Chi_Minh");
+        setPhone(u.phone || "");
+        setReferralPhone(u.referral_phone || "");
         setAvatarUrl(u.avatar_url || u.avatar || null);
         setAvatarPreview(u.avatar_url || u.avatar || null);
       }
@@ -130,6 +134,8 @@ export default function GeneralSettingsPage() {
         setUser(data);
         setDisplayName(data.display_name || data.name || "");
         setTimezone(data.timezone || "Asia/Ho_Chi_Minh");
+        setPhone(data.phone || "");
+        setReferralPhone(data.referral_phone || "");
         setAvatarUrl(data.avatar_url || null);
         setAvatarPreview(data.avatar_url || null);
         localStorage.setItem("zeflyo_user", JSON.stringify(data));
@@ -231,6 +237,8 @@ export default function GeneralSettingsPage() {
           ...user,
           display_name: displayName,
           timezone: timezone,
+          phone: phone,
+          referral_phone: referralPhone,
           avatar_url: finalAvatarUrl,
           avatar: finalAvatarUrl // fallback
         };
@@ -252,8 +260,10 @@ export default function GeneralSettingsPage() {
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
-          display_name: displayName,
-          timezone: timezone,
+          display_name: user?.display_name || user?.name || displayName,
+          timezone: user?.timezone || timezone,
+          phone: phone,
+          referral_phone: referralPhone,
           avatar_url: finalAvatarUrl
         })
       });
@@ -471,16 +481,26 @@ export default function GeneralSettingsPage() {
               <div className="flex flex-col gap-4">
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-zinc-500 mb-1 tracking-wider">
-                    {lang === "en" ? "Display Name" : "Tên hiển thị"}
+                    {lang === "en" ? "User ID" : "ID người dùng"}
                   </label>
-                  <input 
-                    type="text" 
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    required
-                    className="w-full bg-white/5 border border-white/5 focus:border-[#6C63FF]/50 rounded-xl px-4 py-2.5 text-sm outline-none transition-colors text-zinc-200"
-                    placeholder={lang === "en" ? "Enter display name" : "Nhập tên hiển thị"}
-                  />
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      value={user?.id || ""}
+                      readOnly
+                      className="w-full bg-zinc-900/40 border border-white/5 text-zinc-400 rounded-xl pl-4 pr-24 py-2.5 text-sm outline-none cursor-default select-all font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(user?.id || "");
+                        showToast("success", lang === "en" ? "Copied User ID" : "Đã sao chép ID người dùng");
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer active:scale-95"
+                    >
+                      {lang === "en" ? "Copy" : "Sao chép"}
+                    </button>
+                  </div>
                 </div>
 
                 <div>
@@ -502,19 +522,28 @@ export default function GeneralSettingsPage() {
 
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-zinc-500 mb-1 tracking-wider">
-                    {lang === "en" ? "Timezone" : "Múi giờ hoạt động"}
+                    {lang === "en" ? "Phone Number" : "Số điện thoại"}
                   </label>
-                  <select
-                    value={timezone}
-                    onChange={(e) => setTimezone(e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/5 rounded-xl px-4 py-2.5 text-sm outline-none text-zinc-200 cursor-pointer"
-                  >
-                    {timezones.map((tz) => (
-                      <option key={tz.value} value={tz.value} className="bg-zinc-950">
-                        {tz.label}
-                      </option>
-                    ))}
-                  </select>
+                  <input 
+                    type="text" 
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full bg-white/5 border border-white/5 focus:border-[#6C63FF]/50 rounded-xl px-4 py-2.5 text-sm outline-none transition-colors text-zinc-200"
+                    placeholder={lang === "en" ? "Enter phone number" : "Nhập số điện thoại"}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-zinc-500 mb-1 tracking-wider">
+                    {lang === "en" ? "Referral Phone Number" : "Số điện thoại giới thiệu (nếu có)"}
+                  </label>
+                  <input 
+                    type="text" 
+                    value={referralPhone}
+                    onChange={(e) => setReferralPhone(e.target.value)}
+                    className="w-full bg-white/5 border border-white/5 focus:border-[#6C63FF]/50 rounded-xl px-4 py-2.5 text-sm outline-none transition-colors text-zinc-200"
+                    placeholder={lang === "en" ? "Enter referral phone number" : "Nhập số điện thoại người giới thiệu"}
+                  />
                 </div>
               </div>
 

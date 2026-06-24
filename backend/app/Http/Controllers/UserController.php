@@ -15,12 +15,17 @@ class UserController extends Controller
     {
         $user = $request->user();
         return response()->json([
-            'id' => $user->id,
+            'id' => $user->uid ?? $user->id,
             'name' => $user->name,
             'display_name' => $user->display_name,
             'email' => $user->email,
             'avatar_url' => $user->avatar_url,
             'timezone' => $user->timezone,
+            'credits' => $user->credits,
+            'subscription_plan' => $user->subscription_plan,
+            'subscription_expires_at' => $user->subscription_expires_at,
+            'phone' => $user->phone,
+            'referral_phone' => $user->referral_phone,
         ]);
     }
 
@@ -34,7 +39,9 @@ class UserController extends Controller
         $data = $request->validate([
             'display_name' => 'nullable|string|max:255',
             'avatar_url' => 'nullable|string|max:2048',
-            'timezone' => 'required|string|max:100',
+            'timezone' => 'nullable|string|max:100',
+            'phone' => 'nullable|string|max:20',
+            'referral_phone' => 'nullable|string|max:20',
         ]);
 
         $user->update($data);
@@ -42,12 +49,17 @@ class UserController extends Controller
         return response()->json([
             'message' => 'Profile updated successfully',
             'user' => [
-                'id' => $user->id,
+                'id' => $user->uid ?? $user->id,
                 'name' => $user->name,
                 'display_name' => $user->display_name,
                 'email' => $user->email,
                 'avatar_url' => $user->avatar_url,
                 'timezone' => $user->timezone,
+                'credits' => $user->credits,
+                'subscription_plan' => $user->subscription_plan,
+                'subscription_expires_at' => $user->subscription_expires_at,
+                'phone' => $user->phone,
+                'referral_phone' => $user->referral_phone,
             ]
         ]);
     }

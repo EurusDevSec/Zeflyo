@@ -613,6 +613,86 @@ export default function PricingPage() {
             </div>
           </div>
 
+          {/* Mua thêm điểm Section */}
+          <div className="flex flex-col gap-6 mt-12">
+            <div className="text-center">
+              <h3 className="text-xl font-bold text-white">
+                {lang === "en" ? "Buy Extra Credits" : "Mua thêm điểm"}
+              </h3>
+              <p className="text-xs text-zinc-450 mt-1">
+                {lang === "en" ? "Purchased credits are used permanently with no expiration date." : "Điểm mua thêm được sử dụng vĩnh viễn, không có thời hạn"}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+              {[
+                {
+                  id: "credit_savings",
+                  nameVi: "Gói Tiết Kiệm",
+                  nameEn: "Savings Package",
+                  credits: "300 điểm",
+                  price: "đ 25.000",
+                  descVi: "Phù hợp cho người dùng gói Cơ bản cần thêm ~30 bài viết",
+                  descEn: "Suitable for Basic plan users needing ~30 more posts"
+                },
+                {
+                  id: "credit_standard",
+                  nameVi: "Gói Tiêu Chuẩn",
+                  nameEn: "Standard Package",
+                  credits: "700 điểm",
+                  price: "đ 55.000",
+                  descVi: "Bổ sung thêm ~70 bài viết cho tài khoản",
+                  descEn: "Add ~70 more posts to your account"
+                },
+                {
+                  id: "credit_premium",
+                  nameVi: "Gói Cao Cấp",
+                  nameEn: "Premium Package",
+                  credits: "2000 điểm",
+                  price: "đ 120.000",
+                  descVi: "Bổ sung thêm ~200 bài viết cho tài khoản",
+                  descEn: "Add ~200 more posts to your account"
+                },
+                {
+                  id: "credit_enterprise",
+                  nameVi: "Gói Doanh Nghiệp",
+                  nameEn: "Enterprise Package",
+                  credits: "5000 điểm",
+                  price: "đ 250.000",
+                  descVi: "Dành cho người dùng chuyên nghiệp cần số lượng lớn",
+                  descEn: "For professional users requiring high volume"
+                }
+              ].map((pkg) => (
+                <div
+                  key={pkg.id}
+                  className="glass-panel p-6 rounded-3xl border border-white/5 bg-zinc-900/30 flex flex-col justify-between text-center transition-all duration-350 hover:translate-y-[-4px]"
+                >
+                  <div className="flex flex-col gap-4">
+                    <span className="text-xs font-bold text-zinc-400 block">
+                      {lang === "en" ? pkg.nameEn : pkg.nameVi}
+                    </span>
+                    <span className="text-2xl font-black text-[#6C63FF] block">
+                      {pkg.credits}
+                    </span>
+                    <span className="text-xl font-bold text-white block">
+                      {pkg.price}
+                    </span>
+                    <p className="text-[11px] text-zinc-500 leading-relaxed max-w-[200px] mx-auto">
+                      {lang === "en" ? pkg.descEn : pkg.descVi}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => handleUpgradeClick(lang === "en" ? pkg.nameEn : pkg.nameVi)}
+                    className="w-full py-2.5 mt-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-all active:scale-95 cursor-pointer shadow-lg shadow-blue-500/10"
+                  >
+                    {lang === "en" ? "Buy Now" : "Mua ngay"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       )}
 

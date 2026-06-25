@@ -632,7 +632,7 @@ export default function Sidebar({
 
   return (
     <>
-      <aside className="hidden lg:flex w-72 h-screen sticky top-0 bg-[#08080c] dark:bg-[#08080c] light:bg-white border-r border-zinc-800/40 flex-col relative z-20 flex-shrink-0 transition-all duration-300">
+      <aside className="hidden lg:flex w-72 h-screen sticky top-0 bg-[#08080c] dark:bg-[#08080c] border-r border-zinc-800/40 flex-col relative z-20 flex-shrink-0 transition-all duration-300">
       
       {/* Sidebar Header / Logo & Notifications */}
       <div className="p-6 border-b border-zinc-850 flex items-center justify-between flex-shrink-0">

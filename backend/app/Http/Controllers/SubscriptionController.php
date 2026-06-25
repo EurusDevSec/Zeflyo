@@ -92,16 +92,35 @@ class SubscriptionController extends Controller
 
         $code = trim($code);
 
-        // Find the pending payment
-        $payment = PendingPayment::where('code', $code)
-            ->where('status', 'pending')
-            ->first();
+        // Find the payment
+        $payment = PendingPayment::where('code', $code)->first();
 
         if (!$payment) {
             return response()->json([
                 'success' => false,
                 'message' => 'Pending payment not found'
             ], 404);
+        }
+
+        if ($payment->status === 'completed') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment has already been processed successfully'
+            ], 200);
+        }
+
+        if ($payment->status === 'cancelled') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment was already cancelled by the user'
+            ], 400);
+        }
+
+        if ($payment->status === 'failed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment has failed or timed out'
+            ], 400);
         }
 
         // Check if payment has expired (older than 15 minutes)

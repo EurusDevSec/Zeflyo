@@ -529,6 +529,77 @@ button:focus-visible, a:focus-visible {
   color: #64748b !important; /* Slate-500 */
 }
 
+/* Force dark-mode text colors for Sidebar elements in Light Mode */
+.light aside .text-zinc-100,
+.light aside .text-zinc-150,
+.light aside .text-zinc-200,
+.light aside .text-zinc-300,
+.light aside .text-zinc-350,
+.light aside .text-white {
+  color: #ffffff !important;
+}
+
+.light aside .text-zinc-250 {
+  color: #d4d4d8 !important;
+}
+
+.light aside .text-zinc-400 {
+  color: #a1a1aa !important;
+}
+
+.light aside .text-zinc-500,
+.light aside .text-zinc-550,
+.light aside .text-zinc-555,
+.light aside .text-zinc-650 {
+  color: #71717a !important;
+}
+
+.light aside .text-zinc-700 {
+  color: #3f3f46 !important;
+}
+
+.light aside .text-green-400,
+.light aside .text-green-500 {
+  color: #4ade80 !important;
+}
+
+.light aside .text-blue-400,
+.light aside .text-blue-500 {
+  color: #60a5fa !important;
+}
+
+.light aside .text-indigo-400,
+.light aside .text-indigo-500 {
+  color: #818cf8 !important;
+}
+
+.light aside .text-amber-400,
+.light aside .text-amber-500 {
+  color: #fbbf24 !important;
+}
+
+.light aside .text-rose-400 {
+  color: #f87171 !important;
+}
+
+.light aside .text-\[\#8b5cf6\] {
+  color: #8b5cf6 !important;
+}
+
+.light aside .bg-gradient-to-r.from-white.via-zinc-200.to-zinc-400,
+.light aside .bg-gradient-to-b.from-white.to-zinc-300 {
+  background-image: linear-gradient(to right, #ffffff, #e4e4e7, #a1a1aa) !important;
+  color: transparent !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+}
+
+.light aside .bg-zinc-900.text-zinc-200.shadow-sm {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(79, 70, 229, 0.06)) !important;
+  color: #ffffff !important;
+  border-left: 3px solid var(--primary) !important;
+}
+
 /* Light mode glowing background elements adjustment (removes dirty blobs) */
 .light .animate-pulse-glow {
   background-color: rgba(99, 102, 241, 0.06) !important; /* Soft light indigo */

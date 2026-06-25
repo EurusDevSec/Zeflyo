@@ -1049,12 +1049,12 @@ export default function PricingPage() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-black text-white">
-                    {lang === "en" ? "Payment Successful!" : "Thanh toán thành công!"}
+                    {lang === "en" ? "Subscription Successful!" : "Đăng ký gói thành công!"}
                   </h3>
                   <p className="text-sm text-zinc-400 mt-2 max-w-md mx-auto">
                     {lang === "en"
-                      ? `Your account has been upgraded/credited with ${checkoutPlanName} package. Enjoy your upgraded features!`
-                      : `Tài khoản của bạn đã được cập nhật gói dịch vụ ${checkoutPlanName}. Bắt đầu trải nghiệm các tính năng cao cấp ngay!`}
+                      ? `You have successfully subscribed to the package and your account has been upgraded to ${checkoutPlanName}!`
+                      : `Bạn đã đăng ký gói dịch vụ thành công và tài khoản đã được cập nhật lên ${checkoutPlanName}!`}
                   </p>
                 </div>
                 <div className="text-xs text-zinc-500 animate-pulse">

@@ -14,6 +14,7 @@ class UserController extends Controller
     public function getProfile(Request $request)
     {
         $user = $request->user();
+        $user->checkAndAwardDailyFreeCredits();
         return response()->json([
             'id' => $user->uid ?? $user->id,
             'name' => $user->name,
@@ -47,6 +48,7 @@ class UserController extends Controller
         ]);
 
         $user->update($data);
+        $user->checkAndAwardDailyFreeCredits();
 
         return response()->json([
             'message' => 'Profile updated successfully',

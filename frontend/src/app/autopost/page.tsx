@@ -696,7 +696,7 @@ export default function AutoPostPage() {
 
       <main className="flex-1 min-h-screen overflow-y-auto">
         {/* Header */}
-        <header className={`sticky top-0 z-10 px-8 py-5 border-b backdrop-blur-xl ${theme === "dark" ? "border-zinc-800/40 bg-[#08080c]/80" : "border-gray-200 bg-white/80"}`}>
+        <header className={`sticky top-0 z-10 pl-8 pr-8 lg:pr-[280px] py-5 border-b backdrop-blur-xl ${theme === "dark" ? "border-zinc-800/40 bg-[#08080c]/80" : "border-gray-200 bg-white/80"}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/20">

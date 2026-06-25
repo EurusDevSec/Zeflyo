@@ -902,7 +902,7 @@ export default function ChatHub() {
         </header>
 
         {/* Header */}
-        <header className="glass-panel w-full border-b border-white/5 px-6 py-4 flex items-center justify-between z-10">
+        <header className="glass-panel w-full border-b border-white/5 pl-6 pr-6 lg:pr-[280px] py-4 flex items-center justify-between z-10">
           <div className="flex items-center gap-4">
             <div>
               <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">

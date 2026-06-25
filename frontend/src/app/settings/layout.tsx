@@ -53,7 +53,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 blur-[120px] pointer-events-none animate-pulse-glow-delayed" />
 
       {/* Main Sidebar (Desktop) */}
-      <Sidebar />
+      <Sidebar lang={lang} />
 
       {/* Settings Panel Shell */}
       <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-hidden relative z-10">

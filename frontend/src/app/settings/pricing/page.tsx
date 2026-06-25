@@ -172,10 +172,13 @@ export default function PricingPage() {
       const timer = setTimeout(() => {
         setShowCheckoutModal(false);
         setPaymentSuccess(false);
+        if (checkoutPlanId && !checkoutPlanId.startsWith("credit_")) {
+          window.location.href = "/settings/general";
+        }
       }, 4000);
       return () => clearTimeout(timer);
     }
-  }, [paymentSuccess]);
+  }, [paymentSuccess, checkoutPlanId]);
 
   const handleUpgradeClick = async (
     planId: string,
@@ -341,8 +344,21 @@ export default function PricingPage() {
       });
 
       if (res.ok) {
-        // Successful webhook trigger
-        // The polling loop will detect the status change
+        // Immediately fetch updated profile to display points immediately
+        if (savedToken) {
+          const profileRes = await fetch(`${savedApiBase}/api/user/profile`, {
+            headers: {
+              "Accept": "application/json",
+              "Authorization": `Bearer ${savedToken}`
+            }
+          });
+          if (profileRes.ok) {
+            const updatedUser = await profileRes.json();
+            localStorage.setItem("zeflyo_user", JSON.stringify(updatedUser));
+            window.dispatchEvent(new Event("zeflyo_profile_updated"));
+            setPaymentSuccess(true);
+          }
+        }
       } else {
         console.error("Webhook simulation failed");
       }

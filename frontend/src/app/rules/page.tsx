@@ -449,7 +449,7 @@ export default function AutoReplyRules() {
         <div className="flex-1 p-6 lg:p-10 max-w-7xl w-full mx-auto flex flex-col gap-6">
           
           {/* Header title */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-850 pb-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-850 pb-5 lg:pr-[280px]">
             <div>
               <h1 className="text-xl sm:text-2xl font-extrabold tracking-wider text-zinc-150 uppercase flex items-center gap-2">
                 Auto-Reply Rules <Sparkles className="w-5 h-5 text-indigo-400" />

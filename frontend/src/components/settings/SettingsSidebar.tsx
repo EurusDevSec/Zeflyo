@@ -41,9 +41,34 @@ export default function SettingsSidebar() {
     };
   }, []);
 
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const checkUser = () => {
+      const savedUser = localStorage.getItem("zeflyo_user");
+      if (savedUser) {
+        try {
+          setUser(JSON.parse(savedUser));
+        } catch (e) {
+          console.error(e);
+        }
+      } else {
+        setUser(null);
+      }
+    };
+
+    checkUser();
+    window.addEventListener("zeflyo_profile_updated", checkUser);
+    return () => {
+      window.removeEventListener("zeflyo_profile_updated", checkUser);
+    };
+  }, []);
+
+  const isPaidUser = user?.subscription_plan && user.subscription_plan !== "free";
+
   const menuItems: MenuItem[] = [
     { id: "general", labelVi: "Tổng quan", labelEn: "General", icon: User, href: "/settings/general" },
-    { id: "pricing", labelVi: "Bảng giá", labelEn: "Pricing", icon: CreditCard, href: "/settings/pricing" },
+    ...(isPaidUser ? [] : [{ id: "pricing", labelVi: "Bảng giá", labelEn: "Pricing", icon: CreditCard, href: "/settings/pricing" }]),
     { id: "support", labelVi: "Hỗ trợ", labelEn: "Support", icon: HelpCircle, href: "/settings/support" },
     { id: "billing", labelVi: "Lịch sử mua hàng", labelEn: "Purchase History", icon: Receipt, href: "/settings/billing" },
     { id: "guide", labelVi: "Hướng dẫn", labelEn: "Guide", icon: BookOpen, href: "/settings/guide" },

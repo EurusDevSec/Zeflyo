@@ -29,6 +29,7 @@ class SubscriptionController extends Controller
     public function getSubscription(Request $request)
     {
         $user = $request->user();
+        $user->checkAndAwardDailyFreeCredits();
         return response()->json([
             'plan' => $user->subscription_plan ?? 'free',
             'expires_at' => $user->subscription_expires_at,
@@ -217,6 +218,7 @@ class SubscriptionController extends Controller
         $user->subscription_plan = 'free';
         $user->subscription_expires_at = null;
         $user->credits = 100;
+        $user->last_free_credits_at = Carbon::now($user->timezone ?? 'Asia/Ho_Chi_Minh')->toDateString();
         $user->save();
 
         return response()->json([

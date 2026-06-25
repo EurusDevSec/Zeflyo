@@ -12,7 +12,7 @@ use Illuminate\Notifications\Notifiable;
 
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'display_name', 'avatar_url', 'timezone', 'credits', 'subscription_plan', 'subscription_expires_at', 'phone', 'referral_phone', 'uid', 'last_checkin_at'])]
+#[Fillable(['name', 'email', 'password', 'display_name', 'avatar_url', 'timezone', 'credits', 'subscription_plan', 'subscription_expires_at', 'phone', 'referral_phone', 'uid', 'last_checkin_at', 'last_free_credits_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -52,6 +52,21 @@ class User extends Authenticatable
             'password' => 'hashed',
             'last_checkin_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Check if the user is on the Free plan and award them 100 free credits daily.
+     */
+    public function checkAndAwardDailyFreeCredits()
+    {
+        if ($this->subscription_plan === 'free') {
+            $today = \Carbon\Carbon::now($this->timezone ?? 'Asia/Ho_Chi_Minh')->toDateString();
+            if (empty($this->last_free_credits_at) || $this->last_free_credits_at < $today) {
+                $this->credits = ($this->credits ?? 0) + 100;
+                $this->last_free_credits_at = $today;
+                $this->save();
+            }
+        }
     }
 
     /**

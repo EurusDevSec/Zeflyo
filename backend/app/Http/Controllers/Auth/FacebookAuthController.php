@@ -138,6 +138,7 @@ class FacebookAuthController extends Controller
     {
         $checkinHistory = [];
         if ($user->exists) {
+            $user->checkAndAwardDailyFreeCredits();
             $checkinHistory = $user->checkins()
                 ->whereMonth('checkin_date', \Carbon\Carbon::now()->month)
                 ->whereYear('checkin_date', \Carbon\Carbon::now()->year)

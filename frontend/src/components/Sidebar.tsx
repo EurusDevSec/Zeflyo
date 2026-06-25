@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { 
   Home,
@@ -182,6 +182,9 @@ export default function Sidebar({
   const [newBlocksVi, setNewBlocksVi] = useState<ContentBlock[]>([{ type: "paragraph", text: "" }]);
   const [newBlocksEn, setNewBlocksEn] = useState<ContentBlock[]>([{ type: "paragraph", text: "" }]);
 
+  const pointsRef = useRef<HTMLDivElement>(null);
+  const [isPointsOpen, setIsPointsOpen] = useState(false);
+
   useEffect(() => {
     // Load fallbacks from localStorage
     const savedUser = localStorage.getItem("zeflyo_user");
@@ -190,7 +193,27 @@ export default function Sidebar({
 
     if (savedUser) {
       try {
-        setLocalUser(JSON.parse(savedUser));
+        const parsedUser = JSON.parse(savedUser);
+        
+        // Award daily free credits in mock mode
+        const token = localStorage.getItem("zeflyo_token");
+        if (token && token.startsWith("mock_token")) {
+          const plan = parsedUser.subscription_plan || "free";
+          if (plan === "free") {
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (!parsedUser.last_free_credits_at || parsedUser.last_free_credits_at < todayStr) {
+              parsedUser.credits = (parsedUser.credits || 0) + 100;
+              parsedUser.last_free_credits_at = todayStr;
+              parsedUser.subscription_plan = "free";
+              localStorage.setItem("zeflyo_user", JSON.stringify(parsedUser));
+              setTimeout(() => {
+                window.dispatchEvent(new Event("zeflyo_profile_updated"));
+              }, 100);
+            }
+          }
+        }
+        
+        setLocalUser(parsedUser);
       } catch (e) {
         console.error(e);
       }
@@ -210,9 +233,25 @@ export default function Sidebar({
       }
     };
 
+    const handleLangChange = () => {
+      const updatedLang = localStorage.getItem("zeflyo_lang") || "vi";
+      setLocalLang(updatedLang as "en" | "vi");
+    };
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pointsRef.current && !pointsRef.current.contains(event.target as Node)) {
+        setIsPointsOpen(false);
+      }
+    };
+
     window.addEventListener("zeflyo_profile_updated", handleProfileUpdate);
+    window.addEventListener("zeflyo_lang_changed", handleLangChange);
+    document.addEventListener("mousedown", handleClickOutside);
+
     return () => {
       window.removeEventListener("zeflyo_profile_updated", handleProfileUpdate);
+      window.removeEventListener("zeflyo_lang_changed", handleLangChange);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -619,6 +658,75 @@ export default function Sidebar({
     }
   };
 
+  const formatCredits = (num: number | null | undefined) => {
+    const val = num ?? 0;
+    return val.toLocaleString("vi-VN");
+  };
+
+  const getPlanName = () => {
+    if (!user) return lang === "en" ? "Free" : "Miễn phí";
+    const plan = user.subscription_plan || "free";
+    if (plan === "free") return lang === "en" ? "Free" : "Miễn phí";
+    if (plan === "basic") return lang === "en" ? "Basic" : "Cơ bản";
+    if (plan === "pro") return lang === "en" ? "Professional" : "Chuyên nghiệp";
+    if (plan === "premium") return lang === "en" ? "Premium" : "Cao cấp";
+    return plan.toUpperCase();
+  };
+
+  const getExpiryDate = () => {
+    if (!user || !user.subscription_expires_at) {
+      return lang === "en" ? "Permanent" : "Vĩnh viễn";
+    }
+    try {
+      const date = new Date(user.subscription_expires_at);
+      return date.toLocaleDateString(lang === "en" ? "en-US" : "vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      });
+    } catch (e) {
+      return lang === "en" ? "Permanent" : "Vĩnh viễn";
+    }
+  };
+
+  const getResetNote = () => {
+    if (!user) return "";
+    const plan = user.subscription_plan || "free";
+    
+    // For free plan, daily reset
+    if (plan === "free") {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      });
+      return lang === "en"
+        ? `*Resets at the start of the day: ${tomorrowStr}`
+        : `*Thiết lập lại vào đầu ngày: ${tomorrowStr}`;
+    }
+    
+    // For paid plans, renew date is the subscription expiry date
+    if (user.subscription_expires_at) {
+      try {
+        const date = new Date(user.subscription_expires_at);
+        const dateStr = date.toLocaleDateString(lang === "en" ? "en-US" : "vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric"
+        });
+        return lang === "en"
+          ? `*Renews at: ${dateStr}`
+          : `*Thiết lập lại vào ngày: ${dateStr}`;
+      } catch (e) {
+        return "";
+      }
+    }
+    
+    return "";
+  };
+
   const handleSignOut = () => {
     if (propHandleLogout) {
       propHandleLogout();
@@ -667,7 +775,7 @@ export default function Sidebar({
             {lang === "en" ? "CREDITS LEFT" : "TỔNG ĐIỂM"}
           </span>
           <span className="text-3xl font-black text-emerald-400 drop-shadow-[0_0_12px_rgba(52,211,153,0.2)]">
-            {user?.credits !== undefined ? user.credits : 0}
+            {user?.credits ?? 0}
           </span>
 
           {/* Daily Check-in Button */}
@@ -1037,6 +1145,13 @@ export default function Sidebar({
                 ? "Claim +50 free credits daily. Retroactive claims are not allowed." 
                 : "Điểm danh nhận +50 điểm mỗi ngày. Không thể điểm danh bù các ngày đã bỏ lỡ."}
             </p>
+            {(!user?.subscription_plan || user?.subscription_plan === "free") && (
+              <p className="text-[10px] text-emerald-500/80 leading-normal font-semibold tracking-wide mt-1">
+                {lang === "en"
+                  ? "💡 Free tier automatically gets 100 points daily without check-in."
+                  : "💡 Gói miễn phí tự động nhận 100 điểm mỗi ngày không cần điểm danh."}
+              </p>
+            )}
           </div>
 
         </div>
@@ -1751,16 +1866,64 @@ export default function Sidebar({
         </div>
       </div>
     )}
-    {/* Floating Language Switcher for Desktop (Top Right) */}
-    <div className="fixed top-6 right-6 z-30 hidden lg:flex items-center">
+    {/* Top Right Header Container for Desktop (Language Switcher & Points Box) */}
+    <div className="fixed top-5 right-6 z-40 hidden lg:flex items-center gap-3" ref={pointsRef}>
+      
+      {/* Floating Language Switcher */}
       <button
         onClick={handleToggleLanguage}
-        className="flex items-center justify-center gap-1.5 py-1.5 px-3.5 bg-[#0b0b0f]/60 hover:bg-zinc-900/80 text-zinc-200 hover:text-white rounded-full text-xs font-bold transition-all border border-white/5 backdrop-blur-md cursor-pointer active:scale-95 shadow-lg shadow-black/20"
+        className="flex items-center justify-center gap-1.5 py-2.5 px-3.5 bg-[#0b0b0f]/60 hover:bg-zinc-900/80 text-zinc-200 hover:text-white rounded-full text-xs font-bold transition-all border border-white/5 backdrop-blur-md cursor-pointer active:scale-95 shadow-lg shadow-black/20"
         title={lang === "en" ? "Switch Language" : "Đổi ngôn ngữ"}
       >
         <Globe className="w-3.5 h-3.5 text-[#7c3aed] animate-pulse" />
         <span>{lang === "en" ? "EN" : "VI"}</span>
       </button>
+
+      {/* Points Display Box */}
+      {user && (
+        <div className="relative">
+          <button 
+            onClick={() => setIsPointsOpen(!isPointsOpen)}
+            className="flex flex-col items-start px-4.5 py-2 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-100 dark:bg-[#18181b]/95 text-zinc-900 dark:text-white shadow-sm hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all cursor-pointer select-none text-left min-w-[155px]"
+          >
+            <div className="flex items-center gap-1 text-[10px] font-bold text-zinc-550 dark:text-zinc-400 uppercase tracking-wider">
+              <span>{lang === "en" ? "Points" : "Số điểm còn lại"}</span>
+              <Info className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 stroke-[2.5]" />
+            </div>
+            <div className="text-sm font-black text-zinc-900 dark:text-zinc-100 mt-0.5">
+              {formatCredits(user?.credits)} {lang === "en" ? "pts" : "điểm"}
+            </div>
+          </button>
+
+          {/* Popover Dropdown Card */}
+          {isPointsOpen && (
+            <div className="absolute right-0 mt-2.5 w-76 bg-white dark:bg-[#0b0b0f] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-5 shadow-2xl z-50 text-left flex flex-col gap-3.5 text-zinc-900 dark:text-zinc-100 transition-all duration-200">
+              
+              {/* Row 1: Plan and Expiry */}
+              <div className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 border-b border-zinc-100 dark:border-zinc-850 pb-2 flex items-center justify-between">
+                <span>{lang === "en" ? `Plan: ${getPlanName()}` : `Gói: ${getPlanName()}`}</span>
+                <span className="text-zinc-400">|</span>
+                <span>{lang === "en" ? `Expiry: ${getExpiryDate()}` : `HSD: ${getExpiryDate()}`}</span>
+              </div>
+
+              {/* Row 2: Detail stats */}
+              <div className="flex justify-between items-baseline py-1">
+                <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">{lang === "en" ? "Points Remaining" : "Số điểm còn lại"}</span>
+                <span className="text-base font-black text-zinc-900 dark:text-zinc-100">
+                  {formatCredits(user?.credits)} {lang === "en" ? "pts" : "điểm"}
+                </span>
+              </div>
+
+              {/* Row 3: Reset note */}
+              {getResetNote() && (
+                <div className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 border-t border-zinc-100 dark:border-zinc-850 pt-2.5">
+                  {getResetNote()}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
     </>
   );

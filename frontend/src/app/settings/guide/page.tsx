@@ -273,7 +273,7 @@ export default function GuidePage() {
     <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto relative">
       
       {/* Search Header */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-white/5 pb-4">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-white/5 pb-4 lg:pr-[280px]">
         <div>
           <h2 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
             {lang === "en" ? "User Guide & Docs" : "Hướng dẫn sử dụng"}

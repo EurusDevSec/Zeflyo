@@ -365,7 +365,7 @@ export default function PolicyPage() {
     <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto relative print:p-0 print:m-0 print:max-w-none">
       
       {/* Top action header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/5 pb-4 print:hidden">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/5 pb-4 lg:pr-[280px] print:hidden">
         <div>
           <h2 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
             {lang === "en" ? "Legal Policies & Terms" : "Chính sách & Điều khoản"}

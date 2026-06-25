@@ -470,5 +470,69 @@ class SettingsTest extends TestCase
             'id' => $notif->id,
         ]);
     }
+
+    public function test_free_tier_user_gets_100_daily_credits_automatically(): void
+    {
+        $user = User::factory()->create([
+            'subscription_plan' => 'free',
+            'credits' => 10,
+            'last_free_credits_at' => null,
+            'timezone' => 'Asia/Ho_Chi_Minh',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/user/profile');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('credits', 110);
+
+        $user->refresh();
+        $this->assertEquals(110, $user->credits);
+        $this->assertEquals(now('Asia/Ho_Chi_Minh')->toDateString(), $user->last_free_credits_at);
+    }
+
+    public function test_free_tier_user_no_duplicate_daily_credits(): void
+    {
+        $today = now('Asia/Ho_Chi_Minh')->toDateString();
+        $user = User::factory()->create([
+            'subscription_plan' => 'free',
+            'credits' => 10,
+            'last_free_credits_at' => $today,
+            'timezone' => 'Asia/Ho_Chi_Minh',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/user/profile');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('credits', 10);
+
+        $user->refresh();
+        $this->assertEquals(10, $user->credits);
+    }
+
+    public function test_subscription_cancel_sets_last_free_credits_at_timestamp(): void
+    {
+        $user = User::factory()->create([
+            'subscription_plan' => 'pro',
+            'subscription_expires_at' => now()->addMonth(),
+            'credits' => 20,
+            'last_free_credits_at' => null,
+            'timezone' => 'Asia/Ho_Chi_Minh',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->postJson('/api/user/subscription/cancel', [
+                'reasons' => ['Feedback'],
+                'feedback' => 'Test',
+            ]);
+
+        $response->assertStatus(200);
+
+        $user->refresh();
+        $this->assertEquals('free', $user->subscription_plan);
+        $this->assertEquals(100, $user->credits);
+        $this->assertEquals(now('Asia/Ho_Chi_Minh')->toDateString(), $user->last_free_credits_at);
+    }
 }
 

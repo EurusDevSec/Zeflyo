@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { 
   Home,
   Calendar,
@@ -146,6 +147,7 @@ export default function Sidebar({
   handleLogout: propHandleLogout
 }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const resolvedPath = currentPath || pathname || "/";
 
   // Menu collapse/expand states
@@ -817,7 +819,7 @@ export default function Sidebar({
       {/* Sidebar Navigation Menu (Scrollable) */}
       <nav className="flex-1 px-4 py-6 overflow-y-auto flex flex-col gap-2.5 custom-scrollbar pr-1">
         {/* Trang chủ */}
-        <a
+        <Link
           href="/"
           className={`flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider ${
             isHomeActive
@@ -827,7 +829,7 @@ export default function Sidebar({
         >
           <Home className={`w-4.5 h-4.5 ${isHomeActive ? "text-[#7c3aed]" : "text-zinc-500"}`} />
           <span>{lang === "en" ? "Dashboard" : "Trang chủ"}</span>
-        </a>
+        </Link>
 
         {/* Lên lịch đăng bài */}
         <div className="flex flex-col gap-1.5">
@@ -858,7 +860,7 @@ export default function Sidebar({
                   if (setActiveTab) {
                     setActiveTab("setup");
                   } else {
-                    window.location.href = "/scheduler?tab=setup";
+                    router.push("/scheduler?tab=setup");
                   }
                 }}
                 className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -874,7 +876,7 @@ export default function Sidebar({
                   if (setActiveTab) {
                     setActiveTab("list");
                   } else {
-                    window.location.href = "/scheduler?tab=list";
+                    router.push("/scheduler?tab=list");
                   }
                 }}
                 className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -890,7 +892,7 @@ export default function Sidebar({
                   if (setActiveTab) {
                     setActiveTab("automation");
                   } else {
-                    window.location.href = "/scheduler?tab=automation";
+                    router.push("/scheduler?tab=automation");
                   }
                 }}
                 className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -934,7 +936,7 @@ export default function Sidebar({
                   if (setActiveTab) {
                     setActiveTab("setup");
                   } else {
-                    window.location.href = "/autopost?tab=setup";
+                    router.push("/autopost?tab=setup");
                   }
                 }}
                 className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -950,7 +952,7 @@ export default function Sidebar({
                   if (setActiveTab) {
                     setActiveTab("list");
                   } else {
-                    window.location.href = "/autopost?tab=list";
+                    router.push("/autopost?tab=list");
                   }
                 }}
                 className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -966,7 +968,7 @@ export default function Sidebar({
                   if (setActiveTab) {
                     setActiveTab("automation");
                   } else {
-                    window.location.href = "/autopost?tab=automation";
+                    router.push("/autopost?tab=automation");
                   }
                 }}
                 className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -982,7 +984,7 @@ export default function Sidebar({
                   if (setActiveTab) {
                     setActiveTab("product_list");
                   } else {
-                    window.location.href = "/autopost?tab=product_list";
+                    router.push("/autopost?tab=product_list");
                   }
                 }}
                 className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -998,7 +1000,7 @@ export default function Sidebar({
         </div>
 
         {/* Hộp thư tập trung */}
-        <a
+        <Link
           href="/chat"
           className={`flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider ${
             isChatActive
@@ -1008,10 +1010,10 @@ export default function Sidebar({
         >
           <MessageSquare className={`w-4.5 h-4.5 ${isChatActive ? "text-[#7c3aed]" : "text-zinc-500"}`} />
           <span>{lang === "en" ? "Live Chat Hub" : "Hộp thư tập trung"}</span>
-        </a>
+        </Link>
 
         {/* Luật Auto-reply */}
-        <a
+        <Link
           href="/rules"
           className={`flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider ${
             isRulesActive
@@ -1021,7 +1023,7 @@ export default function Sidebar({
         >
           <Sliders className={`w-4.5 h-4.5 ${isRulesActive ? "text-[#7c3aed]" : "text-zinc-500"}`} />
           <span>{lang === "en" ? "Auto-Reply Rules" : "Luật Auto-Reply"}</span>
-        </a>
+        </Link>
 
         {/* Cài đặt */}
         <div className="flex flex-col gap-1.5">
@@ -1047,7 +1049,7 @@ export default function Sidebar({
           {/* Settings Submenu (xổ xuống dưới mục Cài đặt) */}
           {isSettingsOpenState && (
             <div className="pl-4 pr-1 py-1 flex flex-col gap-1 border-l border-zinc-850 ml-5.5 mt-1 transition-all">
-              <a
+              <Link
                 href="/settings/general"
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
                   resolvedPath === "/settings/general"
@@ -1057,11 +1059,11 @@ export default function Sidebar({
               >
                 <User className="w-3.5 h-3.5 shrink-0" />
                 <span>{lang === "en" ? "General" : "Tổng quan"}</span>
-              </a>
+              </Link>
 
               {/* Bảng giá (Chỉ hiển thị cho free tier) */}
               {(!user?.subscription_plan || user.subscription_plan === "free") && (
-                <a
+                <Link
                   href="/settings/pricing"
                   className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
                     resolvedPath === "/settings/pricing"
@@ -1071,10 +1073,10 @@ export default function Sidebar({
                 >
                   <CreditCard className="w-3.5 h-3.5 shrink-0" />
                   <span>{lang === "en" ? "Pricing" : "Bảng giá"}</span>
-                </a>
+                </Link>
               )}
 
-              <a
+              <Link
                 href="/settings/support"
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
                   resolvedPath === "/settings/support"
@@ -1084,9 +1086,9 @@ export default function Sidebar({
               >
                 <HelpCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>{lang === "en" ? "Support" : "Hỗ trợ"}</span>
-              </a>
+              </Link>
 
-              <a
+              <Link
                 href="/settings/billing"
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
                   resolvedPath === "/settings/billing"
@@ -1096,9 +1098,9 @@ export default function Sidebar({
               >
                 <Receipt className="w-3.5 h-3.5 shrink-0" />
                 <span>{lang === "en" ? "Billing" : "Lịch sử"}</span>
-              </a>
+              </Link>
 
-              <a
+              <Link
                 href="/settings/guide"
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
                   resolvedPath === "/settings/guide"
@@ -1108,9 +1110,9 @@ export default function Sidebar({
               >
                 <BookOpen className="w-3.5 h-3.5 shrink-0" />
                 <span>{lang === "en" ? "Guide" : "Hướng dẫn"}</span>
-              </a>
+              </Link>
 
-              <a
+              <Link
                 href="/settings/policy"
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
                   resolvedPath === "/settings/policy"
@@ -1120,9 +1122,9 @@ export default function Sidebar({
               >
                 <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
                 <span>{lang === "en" ? "Policy" : "Chính sách"}</span>
-              </a>
+              </Link>
 
-              <a
+              <Link
                 href="/settings/language"
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
                   resolvedPath === "/settings/language"
@@ -1132,9 +1134,9 @@ export default function Sidebar({
               >
                 <Globe className="w-3.5 h-3.5 shrink-0" />
                 <span>{lang === "en" ? "Language" : "Ngôn ngữ"}</span>
-              </a>
+              </Link>
 
-              <a
+              <Link
                 href="/settings/feedback"
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
                   resolvedPath === "/settings/feedback"
@@ -1144,7 +1146,7 @@ export default function Sidebar({
               >
                 <MessageSquare className="w-3.5 h-3.5 shrink-0" />
                 <span>{lang === "en" ? "Feedback" : "Phản hồi"}</span>
-              </a>
+              </Link>
             </div>
           )}
         </div>

@@ -175,7 +175,7 @@ export default function AutoPostPage() {
     const savedToken = localStorage.getItem("zeflyo_token");
     const savedBaseUrl = localStorage.getItem("api_base_url");
     const savedTheme = localStorage.getItem("zeflyo_theme") as "dark" | "light" | null;
-    const savedLang = localStorage.getItem("lang") as "en" | "vi" | null;
+    const savedLang = localStorage.getItem("zeflyo_lang") as "en" | "vi" | null;
 
     if (savedToken) setToken(savedToken);
     if (savedBaseUrl) setApiBaseUrl(savedBaseUrl);
@@ -271,7 +271,7 @@ export default function AutoPostPage() {
   }, [activeTab, fetchProducts]);
 
   // ── Handlers ──
-  const toggleLanguage = () => { const n = lang === "en" ? "vi" : "en"; setLang(n); localStorage.setItem("lang", n); };
+  const toggleLanguage = () => { const n = lang === "en" ? "vi" : "en"; setLang(n); localStorage.setItem("zeflyo_lang", n); };
   const toggleTheme = () => { const n = theme === "dark" ? "light" : "dark"; setTheme(n); localStorage.setItem("zeflyo_theme", n); };
   const handleLogout = () => { localStorage.removeItem("zeflyo_token"); window.location.href = "/"; };
 

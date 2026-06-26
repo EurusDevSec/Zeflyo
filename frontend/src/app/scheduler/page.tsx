@@ -65,7 +65,7 @@ export default function PostScheduler() {
   const [apiBaseUrl, setApiBaseUrl] = useState<string>("http://localhost");
   const [fanpages, setFanpages] = useState<Fanpage[]>([]);
   const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([]);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
   const [activeTab, setActiveTab] = useState<"setup" | "list" | "automation">("setup");
   
   interface UserProfile {
@@ -117,7 +117,7 @@ export default function PostScheduler() {
     const savedToken = localStorage.getItem("zeflyo_token");
     const savedApiBase = localStorage.getItem("zeflyo_api_base");
     const savedPages = localStorage.getItem("zeflyo_mock_pages");
-    const savedTheme = localStorage.getItem("zeflyo_theme") || "dark";
+    const savedTheme = localStorage.getItem("zeflyo_theme") || "light";
     const savedUser = localStorage.getItem("zeflyo_user");
     const savedLang = localStorage.getItem("zeflyo_lang");
 
@@ -153,7 +153,24 @@ export default function PostScheduler() {
         console.error("Failed to parse mock pages", e);
       }
     }
+
+    // Sync tab parameter from URL
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (tab && (tab === "setup" || tab === "list" || tab === "automation")) {
+        setActiveTab(tab as "setup" | "list" | "automation");
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    if (theme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  }, [theme]);
 
   // Fetch from Backend if real mode
   useEffect(() => {
@@ -706,7 +723,7 @@ export default function PostScheduler() {
   const activePost = queue[activeQueueIndex] || { content: "", imageUrl: "" };
 
   return (
-    <div className="min-h-screen animated-gradient text-[#f4f4f5] flex relative overflow-hidden font-sans">
+    <div className="h-screen animated-gradient text-[#f4f4f5] flex relative overflow-hidden font-sans">
       
       {/* Background Glow Elements */}
       <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-900/10 blur-[120px] pointer-events-none animate-pulse-glow" />
@@ -725,7 +742,7 @@ export default function PostScheduler() {
       />
 
       {/* Main Content Workspace */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-y-auto">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         
         {/* Mobile Header */}
         <header className="w-full bg-[#18181b]/50 border-b border-zinc-800 px-6 py-4 flex items-center justify-between relative z-10 lg:hidden">

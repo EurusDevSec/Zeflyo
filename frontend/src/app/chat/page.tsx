@@ -67,7 +67,6 @@ interface Fanpage {
   is_active: boolean;
 }
 
-// React.memo Message Bubble to avoid redundant re-renders on large history sets
 const MessageBubble = React.memo(function MessageBubble({ msg }: { msg: Interaction }) {
   const isCustomer = msg.is_from_customer;
   const isAi = msg.content.includes("🤖") || msg.fb_item_id.includes(".ai.") || msg.fb_item_id.startsWith("auto_reply");
@@ -76,14 +75,14 @@ const MessageBubble = React.memo(function MessageBubble({ msg }: { msg: Interact
     <div className={`flex ${isCustomer ? "justify-start" : "justify-end"} transition-all duration-200`}>
       <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed border transition-all ${
         isCustomer 
-          ? "bg-zinc-900 border-zinc-800 text-zinc-100" 
+          ? "bg-zinc-100 border-zinc-200 text-zinc-800 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-100" 
           : isAi
-            ? "bg-amber-500/10 border-amber-500/20 text-amber-200"
+            ? "bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-200"
             : "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/10"
       }`}>
         <p className="whitespace-pre-wrap break-words">{msg.content}</p>
         <span className={`block text-[10px] mt-1 text-right font-medium ${
-          isCustomer ? "text-zinc-500" : "text-blue-200"
+          isCustomer ? "text-zinc-500" : "text-white/70"
         }`}>
           {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
@@ -115,7 +114,7 @@ export default function ChatHub() {
   const [apiBaseUrl, setApiBaseUrl] = useState<string>("http://localhost");
   const [activeFanpage, setActiveFanpage] = useState<Fanpage | null>(null);
   const [fanpages, setFanpages] = useState<Fanpage[]>([]);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
   
   interface UserProfile {
     id: string | number;
@@ -184,7 +183,7 @@ export default function ChatHub() {
     const savedToken = localStorage.getItem("zeflyo_token");
     const savedApiBase = localStorage.getItem("zeflyo_api_base");
     const savedPages = localStorage.getItem("zeflyo_mock_pages");
-    const savedTheme = localStorage.getItem("zeflyo_theme") || "dark";
+    const savedTheme = localStorage.getItem("zeflyo_theme") || "light";
     const savedUser = localStorage.getItem("zeflyo_user");
     const savedLang = localStorage.getItem("zeflyo_lang");
 
@@ -245,10 +244,16 @@ export default function ChatHub() {
       setActiveFanpage(mockPages[0]);
       localStorage.setItem("zeflyo_mock_pages", JSON.stringify(mockPages));
     }
-    
-    // Clear initial space query
     setSearchQuery("");
   }, []);
+
+  useEffect(() => {
+    if (theme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  }, [theme]);
 
   // 2. Fetch real pages if token is valid (non-mock)
   useEffect(() => {
@@ -856,7 +861,7 @@ export default function ChatHub() {
   );
 
   return (
-    <div className="min-h-screen animated-gradient text-[#f4f4f5] flex relative overflow-hidden font-sans">
+    <div className="h-screen animated-gradient text-[#f4f4f5] flex relative overflow-hidden font-sans">
       
       {/* Dynamic Background Glowing Blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/10 blur-[120px] animate-pulse-glow" />
@@ -873,7 +878,7 @@ export default function ChatHub() {
       />
 
       {/* Main Content Workspace */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-hidden relative z-10">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative z-10">
         
         {/* Mobile Header */}
         <header className="w-full bg-[#18181b]/50 border-b border-zinc-800 px-6 py-4 flex items-center justify-between lg:hidden z-20">

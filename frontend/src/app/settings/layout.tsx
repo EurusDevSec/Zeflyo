@@ -6,11 +6,11 @@ import Footer from "@/components/Footer";
 import { ArrowLeft, Moon, Sun, LogOut, HelpCircle, Sliders } from "lucide-react";
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
   const [lang, setLang] = useState<"en" | "vi">("vi");
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("zeflyo_theme") || "dark";
+    const savedTheme = localStorage.getItem("zeflyo_theme") || "light";
     const savedLang = localStorage.getItem("zeflyo_lang") || "vi";
     setTheme(savedTheme as "dark" | "light");
     setLang(savedLang as "en" | "vi");
@@ -25,6 +25,14 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
       window.removeEventListener("zeflyo_lang_changed", handleLangChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (theme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  }, [theme]);
 
   const toggleTheme = () => {
     const nextTheme = theme === "dark" ? "light" : "dark";
@@ -52,7 +60,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 blur-[120px] pointer-events-none animate-pulse-glow-delayed" />
 
       {/* Main Sidebar (Desktop) */}
-      <Sidebar lang={lang} />
+      <Sidebar lang={lang} theme={theme} toggleTheme={toggleTheme} />
 
       {/* Settings Panel Shell */}
       <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-hidden relative z-10">

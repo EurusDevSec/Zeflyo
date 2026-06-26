@@ -165,7 +165,7 @@ export default function App() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [lang, setLang] = useState<"en" | "vi">("vi"); // Default to Vietnamese
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
   
   // Custom API configuration
   const [apiBaseUrl, setApiBaseUrl] = useState<string>("http://localhost");
@@ -184,7 +184,7 @@ export default function App() {
     const savedApiBase = localStorage.getItem("zeflyo_api_base");
     const savedAppId = localStorage.getItem("zeflyo_fb_app_id");
     const savedLang = localStorage.getItem("zeflyo_lang");
-    const savedTheme = localStorage.getItem("zeflyo_theme") || "dark";
+    const savedTheme = localStorage.getItem("zeflyo_theme") || "light";
 
     if (savedToken) setToken(savedToken);
     if (savedUser) {
@@ -212,6 +212,14 @@ export default function App() {
 
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (theme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  }, [theme]);
 
   // Fetch fanpages when logged in
   useEffect(() => {
@@ -527,7 +535,7 @@ export default function App() {
   const t = translations[lang];
 
   return (
-    <div className="min-h-screen animated-gradient text-[#f4f4f5] flex relative overflow-hidden font-sans">
+    <div className="h-screen animated-gradient text-[#f4f4f5] flex relative overflow-hidden font-sans">
       
       {/* Background Glow Elements */}
       <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-900/10 blur-[120px] pointer-events-none animate-pulse-glow" />
@@ -617,18 +625,18 @@ export default function App() {
                 {/* Mock Dev login button */}
                 <button
                   onClick={handleMockLogin}
-                  className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700/80 text-zinc-200 font-medium active:scale-[0.98] transition-all border border-white/5 cursor-pointer"
+                  className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-zinc-100 hover:bg-zinc-200/80 text-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 dark:text-zinc-200 font-medium active:scale-[0.98] transition-all border border-zinc-200 dark:border-white/5 cursor-pointer"
                 >
-                  <Database className="w-4 h-4 text-zinc-400" />
+                  <Database className="w-4 h-4 text-zinc-650 dark:text-zinc-400" />
                   {t.mockLogin}
                 </button>
 
                 {/* Dev Login (Real Backend) button */}
                 <button
                   onClick={handleDevLogin}
-                  className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-200 font-medium active:scale-[0.98] transition-all border border-indigo-500/20 cursor-pointer"
+                  className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-600/20 dark:hover:bg-indigo-600/30 dark:text-indigo-200 font-medium active:scale-[0.98] transition-all border border-indigo-200 dark:border-indigo-500/20 cursor-pointer"
                 >
-                  <Sliders className="w-4 h-4 text-indigo-400" />
+                  <Sliders className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                   {t.backendLogin}
                 </button>
               </div>
@@ -701,7 +709,7 @@ export default function App() {
           />
 
           {/* Main Content Workspace */}
-          <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-y-auto relative z-10">
+          <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto relative z-10">
             
             {/* Mobile Header */}
             <header className="w-full bg-[#18181b]/50 border-b border-zinc-800 px-6 py-4 flex items-center justify-between lg:hidden">

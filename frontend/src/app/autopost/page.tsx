@@ -106,7 +106,7 @@ export default function AutoPostPage() {
   const [apiBaseUrl, setApiBaseUrl] = useState<string>("http://localhost");
   const [user, setUser] = useState<UserProfile | null>(null);
   const [lang, setLang] = useState<"en" | "vi">("vi");
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
   const [activeTab, setActiveTab] = useState<"topic_setup" | "manage" | "product_setup" | "product_list">("topic_setup");
   const [fanpages, setFanpages] = useState<Fanpage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -174,17 +174,47 @@ export default function AutoPostPage() {
   useEffect(() => {
     const savedToken = localStorage.getItem("zeflyo_token");
     const savedBaseUrl = localStorage.getItem("api_base_url");
-    const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
+    const savedTheme = localStorage.getItem("zeflyo_theme") as "dark" | "light" | null;
     const savedLang = localStorage.getItem("lang") as "en" | "vi" | null;
 
     if (savedToken) setToken(savedToken);
     if (savedBaseUrl) setApiBaseUrl(savedBaseUrl);
-    if (savedTheme) setTheme(savedTheme);
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else {
+      setTheme("light");
+    }
     if (savedLang) setLang(savedLang);
 
     const today = new Date();
     setScheduleDate(today.toISOString().split("T")[0]);
+
+    // Sync tab parameter from URL
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (tab) {
+        const localMap: Record<string, "topic_setup" | "manage" | "product_setup" | "product_list"> = {
+          setup: "topic_setup",
+          list: "manage",
+          automation: "product_setup",
+          product_list: "product_list"
+        };
+        const mapped = localMap[tab];
+        if (mapped) {
+          setActiveTab(mapped);
+        }
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    if (theme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  }, [theme]);
 
   useEffect(() => {
     if (!token) { setLoading(false); return; }
@@ -242,7 +272,7 @@ export default function AutoPostPage() {
 
   // ── Handlers ──
   const toggleLanguage = () => { const n = lang === "en" ? "vi" : "en"; setLang(n); localStorage.setItem("lang", n); };
-  const toggleTheme = () => { const n = theme === "dark" ? "light" : "dark"; setTheme(n); localStorage.setItem("theme", n); };
+  const toggleTheme = () => { const n = theme === "dark" ? "light" : "dark"; setTheme(n); localStorage.setItem("zeflyo_theme", n); };
   const handleLogout = () => { localStorage.removeItem("zeflyo_token"); window.location.href = "/"; };
 
   const handleGenerateTopics = async () => {
@@ -669,7 +699,7 @@ export default function AutoPostPage() {
   }
 
   return (
-    <div className={`min-h-screen flex ${theme === "dark" ? "bg-[#08080c] text-zinc-100" : "bg-gray-50 text-gray-900"}`}>
+    <div className={`h-screen flex overflow-hidden ${theme === "dark" ? "bg-[#08080c] text-zinc-100" : "bg-gray-50 text-gray-900"}`}>
       <Sidebar
         currentPath="/autopost"
         activeTab={
@@ -694,7 +724,7 @@ export default function AutoPostPage() {
         handleLogout={handleLogout}
       />
 
-      <main className="flex-1 min-h-screen overflow-y-auto">
+      <main className="flex-1 h-screen overflow-y-auto">
         {/* Header */}
         <header className={`sticky top-0 z-10 pl-8 pr-8 lg:pr-[280px] py-5 border-b backdrop-blur-xl ${theme === "dark" ? "border-zinc-800/40 bg-[#08080c]/80" : "border-gray-200 bg-white/80"}`}>
           <div className="flex items-center justify-between">
@@ -712,26 +742,7 @@ export default function AutoPostPage() {
               </div>
             </div>
 
-            {/* Tab Switcher */}
-            <div className="flex flex-wrap gap-1.5 bg-[#09090b]/40 border border-zinc-800/40 p-1 rounded-xl shadow-inner">
-              {[
-                { key: "topic_setup" as const, icon: <Sparkles className="w-4 h-4" />, label: lang === "vi" ? "Chủ đề" : "Topics" },
-                { key: "manage" as const, icon: <List className="w-4 h-4" />, label: lang === "vi" ? "Quản lý" : "Manage" },
-                { key: "product_setup" as const, icon: <Package className="w-4 h-4" />, label: lang === "vi" ? "Thêm sản phẩm" : "Add Product" },
-                { key: "product_list" as const, icon: <FileText className="w-4 h-4" />, label: lang === "vi" ? "Danh sách sản phẩm" : "Product List" },
-              ].map(t => (
-                <button
-                  key={t.key}
-                  onClick={() => setActiveTab(t.key)}
-                  className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${activeTab === t.key
-                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
-                    : theme === "dark" ? "text-zinc-400 hover:bg-zinc-900/60" : "text-gray-500 hover:bg-gray-150"
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5">{t.icon}{t.label}</span>
-                </button>
-              ))}
-            </div>
+
           </div>
         </header>
 

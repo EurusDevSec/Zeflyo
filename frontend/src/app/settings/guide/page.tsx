@@ -400,7 +400,7 @@ export default function GuidePage() {
             >
               {/* Header Title */}
               <div className="border-b border-white/5 pb-4">
-                <h3 className="text-lg font-bold text-white">
+                <h3 className="text-lg font-bold text-zinc-900 dark:text-white">
                   {lang === "en" ? ch.titleEn : ch.titleVi}
                 </h3>
               </div>
@@ -430,10 +430,10 @@ export default function GuidePage() {
                         key={idx}
                         className={`p-4 rounded-2xl border text-xs leading-relaxed flex items-start gap-3 shadow-inner ${
                           isTip
-                            ? "bg-green-500/5 border-green-500/10 text-green-300"
+                            ? "bg-green-500/5 border-green-500/10 text-green-700 dark:text-green-300"
                             : isWarning
-                              ? "bg-yellow-500/5 border-yellow-500/10 text-yellow-300"
-                              : "bg-red-500/5 border-red-500/10 text-red-300"
+                              ? "bg-yellow-500/5 border-yellow-500/10 text-yellow-700 dark:text-yellow-300"
+                              : "bg-red-500/5 border-red-500/10 text-red-700 dark:text-red-300"
                         }`}
                       >
                         {isTip ? (

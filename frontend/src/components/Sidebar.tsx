@@ -155,7 +155,7 @@ export default function Sidebar({
 
   // Local state fallbacks (for when props are not provided, e.g. in Settings layout)
   const [localUser, setLocalUser] = useState<any>(null);
-  const [localTheme, setLocalTheme] = useState<"dark" | "light">("dark");
+  const [localTheme, setLocalTheme] = useState<"dark" | "light">("light");
   const [localLang, setLocalLang] = useState<"en" | "vi">("vi");
   const [checkInLoading, setCheckInLoading] = useState(false);
   const [checkInMsg, setCheckInMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -199,7 +199,7 @@ export default function Sidebar({
   useEffect(() => {
     // Load fallbacks from localStorage
     const savedUser = localStorage.getItem("zeflyo_user");
-    const savedTheme = localStorage.getItem("zeflyo_theme") || "dark";
+    const savedTheme = localStorage.getItem("zeflyo_theme") || "light";
     const savedLang = localStorage.getItem("zeflyo_lang") || "vi";
 
     if (savedUser) {
@@ -832,13 +832,7 @@ export default function Sidebar({
         {/* Lên lịch đăng bài */}
         <div className="flex flex-col gap-1.5">
           <div
-            onClick={() => {
-              if (!isSchedulerActive) {
-                window.location.href = "/scheduler";
-              } else {
-                setIsSchedulerOpen(!isSchedulerOpen);
-              }
-            }}
+            onClick={() => setIsSchedulerOpen(!isSchedulerOpen)}
             className={`flex items-center justify-between px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider cursor-pointer ${
               isSchedulerActive
                 ? "bg-zinc-900 text-zinc-200 shadow-sm"
@@ -849,18 +843,26 @@ export default function Sidebar({
               <Calendar className={`w-4.5 h-4.5 ${isSchedulerActive ? "text-[#7c3aed]" : "text-zinc-500"}`} />
               <span>{lang === "en" ? "Post Scheduler" : "Lên lịch đăng bài"}</span>
             </span>
-            {isSchedulerActive && setActiveTab && (
-              isSchedulerOpen ? <ChevronDown className="w-4 h-4 text-[#7c3aed]" /> : <ChevronRight className="w-4 h-4 text-zinc-500" />
+            {isSchedulerOpen ? (
+              <ChevronDown className="w-4 h-4 text-[#7c3aed]" />
+            ) : (
+              <ChevronRight className="w-4 h-4 text-zinc-500" />
             )}
           </div>
 
           {/* Submenu Lên lịch đăng bài */}
-          {isSchedulerActive && setActiveTab && isSchedulerOpen && (
+          {isSchedulerOpen && (
             <div className="pl-4 mt-1.5 flex flex-col gap-1.5 border-l border-zinc-800 ml-5">
               <button 
-                onClick={() => setActiveTab("setup")}
+                onClick={() => {
+                  if (setActiveTab) {
+                    setActiveTab("setup");
+                  } else {
+                    window.location.href = "/scheduler?tab=setup";
+                  }
+                }}
                 className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "setup" 
+                  (isSchedulerActive && activeTab === "setup")
                     ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
                     : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
                 }`}
@@ -868,9 +870,15 @@ export default function Sidebar({
                 {lang === "en" ? "Schedule Setup" : "Thiết lập lịch đăng"}
               </button>
               <button 
-                onClick={() => setActiveTab("list")}
+                onClick={() => {
+                  if (setActiveTab) {
+                    setActiveTab("list");
+                  } else {
+                    window.location.href = "/scheduler?tab=list";
+                  }
+                }}
                 className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "list" 
+                  (isSchedulerActive && activeTab === "list")
                     ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
                     : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
                 }`}
@@ -878,9 +886,15 @@ export default function Sidebar({
                 {lang === "en" ? "Manage Schedule" : "Quản lý lịch đăng"}
               </button>
               <button 
-                onClick={() => setActiveTab("automation")}
+                onClick={() => {
+                  if (setActiveTab) {
+                    setActiveTab("automation");
+                  } else {
+                    window.location.href = "/scheduler?tab=automation";
+                  }
+                }}
                 className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "automation" 
+                  (isSchedulerActive && activeTab === "automation")
                     ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
                     : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
                 }`}
@@ -894,13 +908,7 @@ export default function Sidebar({
         {/* Đăng bài tự động AI */}
         <div className="flex flex-col gap-1.5">
           <div
-            onClick={() => {
-              if (!isAutopostActive) {
-                window.location.href = "/autopost";
-              } else {
-                setIsAutopostOpen(!isAutopostOpen);
-              }
-            }}
+            onClick={() => setIsAutopostOpen(!isAutopostOpen)}
             className={`flex items-center justify-between px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider cursor-pointer ${
               isAutopostActive
                 ? "bg-zinc-900 text-zinc-200 shadow-sm"
@@ -911,18 +919,26 @@ export default function Sidebar({
               <Wand2 className={`w-4.5 h-4.5 ${isAutopostActive ? "text-[#7c3aed]" : "text-zinc-500"}`} />
               <span>{lang === "en" ? "AI Auto-Post" : "Đăng bài tự động AI"}</span>
             </span>
-            {isAutopostActive && setActiveTab && (
-              isAutopostOpen ? <ChevronDown className="w-4 h-4 text-[#7c3aed]" /> : <ChevronRight className="w-4 h-4 text-zinc-500" />
+            {isAutopostOpen ? (
+              <ChevronDown className="w-4 h-4 text-[#7c3aed]" />
+            ) : (
+              <ChevronRight className="w-4 h-4 text-zinc-500" />
             )}
           </div>
 
           {/* Submenu Đăng bài tự động AI */}
-          {isAutopostActive && setActiveTab && isAutopostOpen && (
+          {isAutopostOpen && (
             <div className="pl-4 mt-1.5 flex flex-col gap-1.5 border-l border-zinc-800 ml-5">
               <button 
-                onClick={() => setActiveTab("setup")}
+                onClick={() => {
+                  if (setActiveTab) {
+                    setActiveTab("setup");
+                  } else {
+                    window.location.href = "/autopost?tab=setup";
+                  }
+                }}
                 className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "setup" 
+                  (isAutopostActive && activeTab === "setup")
                     ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
                     : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
                 }`}
@@ -930,9 +946,15 @@ export default function Sidebar({
                 {lang === "en" ? "Topic Setup" : "Thiết lập từ chủ đề"}
               </button>
               <button 
-                onClick={() => setActiveTab("list")}
+                onClick={() => {
+                  if (setActiveTab) {
+                    setActiveTab("list");
+                  } else {
+                    window.location.href = "/autopost?tab=list";
+                  }
+                }}
                 className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "list" 
+                  (isAutopostActive && activeTab === "list")
                     ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
                     : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
                 }`}
@@ -940,9 +962,15 @@ export default function Sidebar({
                 {lang === "en" ? "Manage Setups" : "Quản lý lịch đăng"}
               </button>
               <button 
-                onClick={() => setActiveTab("automation")}
+                onClick={() => {
+                  if (setActiveTab) {
+                    setActiveTab("automation");
+                  } else {
+                    window.location.href = "/autopost?tab=automation";
+                  }
+                }}
                 className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "automation" 
+                  (isAutopostActive && activeTab === "automation")
                     ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
                     : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
                 }`}
@@ -950,9 +978,15 @@ export default function Sidebar({
                 {lang === "en" ? "Add Product" : "Thêm sản phẩm"}
               </button>
               <button 
-                onClick={() => setActiveTab("product_list")}
+                onClick={() => {
+                  if (setActiveTab) {
+                    setActiveTab("product_list");
+                  } else {
+                    window.location.href = "/autopost?tab=product_list";
+                  }
+                }}
                 className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "product_list" 
+                  (isAutopostActive && activeTab === "product_list")
                     ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
                     : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
                 }`}
@@ -992,13 +1026,7 @@ export default function Sidebar({
         {/* Cài đặt */}
         <div className="flex flex-col gap-1.5">
           <div
-            onClick={() => {
-              if (!isSettingsActive) {
-                window.location.href = "/settings/general";
-              } else {
-                setIsSettingsOpenState(!isSettingsOpenState);
-              }
-            }}
+            onClick={() => setIsSettingsOpenState(!isSettingsOpenState)}
             className={`flex items-center justify-between px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider cursor-pointer ${
               isSettingsActive
                 ? "bg-zinc-900 text-zinc-200 shadow-sm"
@@ -1009,13 +1037,15 @@ export default function Sidebar({
               <Settings className={`w-4.5 h-4.5 ${isSettingsActive ? "text-[#7c3aed]" : "text-zinc-500"}`} />
               <span>{lang === "en" ? "Settings" : "Cài đặt"}</span>
             </span>
-            {isSettingsActive && (
-              isSettingsOpenState ? <ChevronDown className="w-4 h-4 text-[#7c3aed]" /> : <ChevronRight className="w-4 h-4 text-zinc-500" />
+            {isSettingsOpenState ? (
+              <ChevronDown className="w-4 h-4 text-[#7c3aed]" />
+            ) : (
+              <ChevronRight className="w-4 h-4 text-zinc-500" />
             )}
           </div>
 
           {/* Settings Submenu (xổ xuống dưới mục Cài đặt) */}
-          {isSettingsActive && isSettingsOpenState && (
+          {isSettingsOpenState && (
             <div className="pl-4 pr-1 py-1 flex flex-col gap-1 border-l border-zinc-850 ml-5.5 mt-1 transition-all">
               <a
                 href="/settings/general"

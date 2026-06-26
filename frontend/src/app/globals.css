@@ -25,7 +25,7 @@
   --ring: #7c3aed;
   
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  --font-heading: 'Outfit', sans-serif;
+  --font-heading: 'Plus Jakarta Sans', 'Outfit', sans-serif;
   
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
@@ -310,27 +310,27 @@ option {
 
 /* Sidebar structure visual fix */
 aside {
-  --background: #020204 !important;
-  --foreground: #f4f4f5 !important;
-  --card: rgba(10, 10, 15, 0.7) !important;
-  --card-foreground: #f4f4f5 !important;
-  --popover: #050508 !important;
-  --popover-foreground: #f4f4f5 !important;
-  --primary: #7c3aed !important;
-  --primary-hover: #8b5cf6 !important;
-  --primary-foreground: #ffffff !important;
-  --secondary: #18181b !important;
-  --secondary-foreground: #fafafa !important;
-  --muted: #1e1e24 !important;
-  --muted-foreground: #a1a1aa !important;
-  --accent: #0891b2 !important;
-  --accent-foreground: #fafafa !important;
-  --destructive: #f43f5e !important;
-  --destructive-foreground: #fafafa !important;
-  --border: rgba(255, 255, 255, 0.06) !important;
-  --border-hover: rgba(124, 58, 237, 0.25) !important;
-  --input: rgba(5, 5, 10, 0.6) !important;
-  --ring: #7c3aed !important;
+  --background: #020204;
+  --foreground: #f4f4f5;
+  --card: rgba(10, 10, 15, 0.7);
+  --card-foreground: #f4f4f5;
+  --popover: #050508;
+  --popover-foreground: #f4f4f5;
+  --primary: #7c3aed;
+  --primary-hover: #8b5cf6;
+  --primary-foreground: #ffffff;
+  --secondary: #18181b;
+  --secondary-foreground: #fafafa;
+  --muted: #1e1e24;
+  --muted-foreground: #a1a1aa;
+  --accent: #0891b2;
+  --accent-foreground: #fafafa;
+  --destructive: #f43f5e;
+  --destructive-foreground: #fafafa;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(124, 58, 237, 0.25);
+  --input: rgba(5, 5, 10, 0.6);
+  --ring: #7c3aed;
 }
 
 aside.w-72 {
@@ -338,8 +338,30 @@ aside.w-72 {
   border-right: 1px solid var(--border) !important;
 }
 
+.light aside {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --card: rgba(241, 245, 249, 0.5);
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #4f46e5;
+  --primary-hover: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
+  --accent: #06b6d4;
+  --border: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --input: #ffffff;
+  --ring: #4f46e5;
+}
+
 .light aside.w-72 {
-  background-color: #0b0a12 !important;
+  background-color: #ffffff !important;
+  border-right: 1px solid #e2e8f0 !important;
 }
 
 /* Points badge glow in sidebar */
@@ -360,9 +382,37 @@ aside.w-72 {
 .text-zinc-150,
 .text-zinc-200,
 .text-zinc-300,
-.text-zinc-350,
-.text-white {
+.text-zinc-350 {
   color: var(--foreground) !important;
+}
+
+/* Light mode text colors override to prevent contrast issues */
+.light .text-white {
+  color: var(--foreground) !important;
+}
+
+/* Ensure white text remains white inside colored containers, buttons, and links */
+.light button.text-white,
+.light a.text-white,
+.light button .text-white,
+.light a .text-white,
+.light button .text-zinc-100,
+.light a .text-zinc-100,
+.light button .text-zinc-200,
+.light a .text-zinc-200,
+.light .bg-blue-600,
+.light .bg-\[\#6C63FF\],
+.light .bg-gradient-to-r,
+.light .bg-emerald-600,
+.light .bg-green-500,
+.light .bg-red-500,
+.light .bg-blue-600 *,
+.light .bg-\[\#6C63FF\] *,
+.light .bg-gradient-to-r *,
+.light .bg-emerald-600 *,
+.light .bg-green-500 *,
+.light .bg-red-500 * {
+  color: #ffffff !important;
 }
 
 .text-zinc-400,
@@ -529,76 +579,7 @@ button:focus-visible, a:focus-visible {
   color: #64748b !important; /* Slate-500 */
 }
 
-/* Force dark-mode text colors for Sidebar elements in Light Mode */
-.light aside .text-zinc-100,
-.light aside .text-zinc-150,
-.light aside .text-zinc-200,
-.light aside .text-zinc-300,
-.light aside .text-zinc-350,
-.light aside .text-white {
-  color: #ffffff !important;
-}
 
-.light aside .text-zinc-250 {
-  color: #d4d4d8 !important;
-}
-
-.light aside .text-zinc-400 {
-  color: #a1a1aa !important;
-}
-
-.light aside .text-zinc-500,
-.light aside .text-zinc-550,
-.light aside .text-zinc-555,
-.light aside .text-zinc-650 {
-  color: #71717a !important;
-}
-
-.light aside .text-zinc-700 {
-  color: #3f3f46 !important;
-}
-
-.light aside .text-green-400,
-.light aside .text-green-500 {
-  color: #4ade80 !important;
-}
-
-.light aside .text-blue-400,
-.light aside .text-blue-500 {
-  color: #60a5fa !important;
-}
-
-.light aside .text-indigo-400,
-.light aside .text-indigo-500 {
-  color: #818cf8 !important;
-}
-
-.light aside .text-amber-400,
-.light aside .text-amber-500 {
-  color: #fbbf24 !important;
-}
-
-.light aside .text-rose-400 {
-  color: #f87171 !important;
-}
-
-.light aside .text-\[\#8b5cf6\] {
-  color: #8b5cf6 !important;
-}
-
-.light aside .bg-gradient-to-r.from-white.via-zinc-200.to-zinc-400,
-.light aside .bg-gradient-to-b.from-white.to-zinc-300 {
-  background-image: linear-gradient(to right, #ffffff, #e4e4e7, #a1a1aa) !important;
-  color: transparent !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-}
-
-.light aside .bg-zinc-900.text-zinc-200.shadow-sm {
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(79, 70, 229, 0.06)) !important;
-  color: #ffffff !important;
-  border-left: 3px solid var(--primary) !important;
-}
 
 /* Light mode glowing background elements adjustment (removes dirty blobs) */
 .light .animate-pulse-glow {
@@ -611,4 +592,78 @@ button:focus-visible, a:focus-visible {
 /* Premium Typography refinements */
 h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.02em;
+}
+
+/* Light mode Sidebar specific overrides */
+.light aside a:not(.bg-zinc-900),
+.light aside div[onClick]:not(.bg-zinc-900),
+.light aside button:not(.bg-zinc-900):not(.bg-gradient-to-r) {
+  color: #475569 !important; /* slate-600 */
+}
+
+.light aside a:not(.bg-zinc-900):hover,
+.light aside div[onClick]:not(.bg-zinc-900):hover,
+.light aside button:not(.bg-zinc-900):not(.bg-gradient-to-r):hover {
+  color: #0f172a !important; /* slate-900 */
+  background-color: rgba(79, 70, 229, 0.06) !important; /* soft active/hover purple */
+}
+
+.light aside button[title="Notifications"],
+.light aside button[title="Toggle theme"] {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light aside button[title="Notifications"]:hover,
+.light aside button[title="Toggle theme"]:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.light aside .px-6 .bg-zinc-900\/30 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light aside .bg-zinc-900\/60 {
+  background-color: #e2e8f0 !important;
+  color: #64748b !important;
+  border-color: #cbd5e1 !important;
+}
+
+.light aside .bg-zinc-950\/40 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Light mode Sidebar specific footer & text refinements */
+.light aside div.bg-\[\#08080c\] {
+  background-color: #ffffff !important;
+}
+
+.light aside,
+.light aside * {
+  border-color: #e2e8f0 !important;
+}
+
+.light aside span:not(.text-white):not(.text-emerald-400),
+.light aside .text-zinc-200,
+.light aside .text-zinc-300,
+.light aside .text-zinc-350,
+.light aside .text-zinc-400,
+.light aside .text-zinc-450,
+.light aside .text-zinc-500 {
+  color: #475569 !important;
+}
+
+.light aside .text-zinc-200.font-bold {
+  color: #0f172a !important;
+}
+
+.light .logo-text {
+  background-image: linear-gradient(to right, #4f46e5, #7c3aed, #4f46e5) !important;
+  color: transparent !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
 }

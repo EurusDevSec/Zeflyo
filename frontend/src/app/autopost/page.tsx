@@ -9,6 +9,8 @@ import {
   Edit3, Eye, Send, Package, List, Settings, Wand2,
   X, GripVertical, ToggleLeft, ToggleRight, FileText
 } from "lucide-react";
+import { Locale } from "@/lib/i18n";
+import { useTranslate } from "@/lib/useTranslate";
 
 // ───────── Type Definitions ─────────
 interface Fanpage {
@@ -106,6 +108,7 @@ export default function AutoPostPage() {
   const [apiBaseUrl, setApiBaseUrl] = useState<string>("http://localhost");
   const [user, setUser] = useState<UserProfile | null>(null);
   const [lang, setLang] = useState<"en" | "vi">("vi");
+  const t = useTranslate(lang);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [activeTab, setActiveTab] = useState<"topic_setup" | "manage" | "product_setup" | "product_list">("topic_setup");
   const [fanpages, setFanpages] = useState<Fanpage[]>([]);
@@ -175,7 +178,7 @@ export default function AutoPostPage() {
     const savedToken = localStorage.getItem("zeflyo_token");
     const savedBaseUrl = localStorage.getItem("api_base_url");
     const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
-    const savedLang = localStorage.getItem("lang") as "en" | "vi" | null;
+    const savedLang = localStorage.getItem("zeflyo_lang") as "en" | "vi" | null;
 
     if (savedToken) setToken(savedToken);
     if (savedBaseUrl) setApiBaseUrl(savedBaseUrl);
@@ -257,10 +260,10 @@ export default function AutoPostPage() {
       if (res.ok) {
         const d = await res.json();
         setGeneratedTopics(d.topics?.map((t: TopicItem) => t.title) || []);
-        setSetupMsg({ type: "success", text: lang === "vi" ? `Đã tạo ${d.topics?.length || 0} chủ đề thành công!` : `Generated ${d.topics?.length || 0} topics!` });
+        setSetupMsg({ type: "success", text: t("autopost.notifications.topicGenerated", { params: { count: d.topics?.length || 0 } }) });
       } else {
         const err = await res.json();
-        setSetupMsg({ type: "error", text: err.error || "Failed to generate topics." });
+        setSetupMsg({ type: "error", text: err.error || t("autopost.notifications.failed") });
       }
     } catch (e) {
       setSetupMsg({ type: "error", text: "Network error." });
@@ -286,7 +289,7 @@ export default function AutoPostPage() {
 
   const handleCreateSetup = async (sourceType: "topic" | "product" = "topic") => {
     if (!token || !setupName.trim() || selectedPages.length === 0) {
-      setSetupMsg({ type: "error", text: lang === "vi" ? "Vui lòng điền tên và chọn ít nhất 1 fanpage." : "Please fill name and select at least 1 fanpage." });
+      setSetupMsg({ type: "error", text: t("autopost.notifications.fillNameAndPages") });
       return;
     }
     setSubmitting(true);

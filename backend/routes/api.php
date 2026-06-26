@@ -59,6 +59,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/products/{id}', [\App\Http\Controllers\ProductController::class, 'destroy']);
     Route::post('/products/reorder', [\App\Http\Controllers\ProductController::class, 'reorder']);
 
+    // User settings and feedback APIs
+    Route::put('/user/language', [\App\Http\Controllers\UserSettingsController::class, 'updateLanguage']);
+    Route::post('/feedback', [\App\Http\Controllers\FeedbackController::class, 'store']);
+
     // General Upload API
     Route::post('/upload', [\App\Http\Controllers\UploadController::class, 'upload']);
 });

@@ -148,6 +148,11 @@ export default function Sidebar({
   const pathname = usePathname();
   const resolvedPath = currentPath || pathname || "/";
 
+  // Menu collapse/expand states
+  const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
+  const [isAutopostOpen, setIsAutopostOpen] = useState(false);
+  const [isSettingsOpenState, setIsSettingsOpenState] = useState(false);
+
   // Local state fallbacks (for when props are not provided, e.g. in Settings layout)
   const [localUser, setLocalUser] = useState<any>(null);
   const [localTheme, setLocalTheme] = useState<"dark" | "light">("dark");
@@ -266,6 +271,12 @@ export default function Sidebar({
       setLocalUser(propUser);
     }
   }, [propUser]);
+
+  useEffect(() => {
+    setIsSchedulerOpen(resolvedPath === "/scheduler");
+    setIsAutopostOpen(resolvedPath === "/autopost");
+    setIsSettingsOpenState(resolvedPath.startsWith("/settings"));
+  }, [resolvedPath]);
 
   // Determine active values (prefer local state if available, fallback to props)
   const user = localUser !== null ? localUser : (propUser !== undefined ? propUser : null);
@@ -819,15 +830,32 @@ export default function Sidebar({
         </a>
 
         {/* Lên lịch đăng bài */}
-        {isSchedulerActive && setActiveTab ? (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between px-3.5 py-3 bg-zinc-900 text-zinc-200 rounded-xl text-xs font-bold tracking-wider uppercase shadow-sm">
-              <span className="flex items-center gap-3">
-                <Calendar className="w-4.5 h-4.5 text-[#7c3aed]" />
-                <span>{lang === "en" ? "Post Scheduler" : "Lên lịch đăng bài"}</span>
-              </span>
-              <ChevronDown className="w-4 h-4 text-[#7c3aed]" />
-            </div>
+        <div className="flex flex-col gap-1.5">
+          <div
+            onClick={() => {
+              if (!isSchedulerActive) {
+                window.location.href = "/scheduler";
+              } else {
+                setIsSchedulerOpen(!isSchedulerOpen);
+              }
+            }}
+            className={`flex items-center justify-between px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider cursor-pointer ${
+              isSchedulerActive
+                ? "bg-zinc-900 text-zinc-200 shadow-sm"
+                : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/30"
+            }`}
+          >
+            <span className="flex items-center gap-3">
+              <Calendar className={`w-4.5 h-4.5 ${isSchedulerActive ? "text-[#7c3aed]" : "text-zinc-500"}`} />
+              <span>{lang === "en" ? "Post Scheduler" : "Lên lịch đăng bài"}</span>
+            </span>
+            {isSchedulerActive && setActiveTab && (
+              isSchedulerOpen ? <ChevronDown className="w-4 h-4 text-[#7c3aed]" /> : <ChevronRight className="w-4 h-4 text-zinc-500" />
+            )}
+          </div>
+
+          {/* Submenu Lên lịch đăng bài */}
+          {isSchedulerActive && setActiveTab && isSchedulerOpen && (
             <div className="pl-4 mt-1.5 flex flex-col gap-1.5 border-l border-zinc-800 ml-5">
               <button 
                 onClick={() => setActiveTab("setup")}
@@ -860,31 +888,36 @@ export default function Sidebar({
                 {lang === "en" ? "Auto Campaigns" : "Kích hoạt tự động hóa"}
               </button>
             </div>
-          </div>
-        ) : (
-          <a
-            href="/scheduler"
-            className={`flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider ${
-              isSchedulerActive
+          )}
+        </div>
+
+        {/* Đăng bài tự động AI */}
+        <div className="flex flex-col gap-1.5">
+          <div
+            onClick={() => {
+              if (!isAutopostActive) {
+                window.location.href = "/autopost";
+              } else {
+                setIsAutopostOpen(!isAutopostOpen);
+              }
+            }}
+            className={`flex items-center justify-between px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider cursor-pointer ${
+              isAutopostActive
                 ? "bg-zinc-900 text-zinc-200 shadow-sm"
                 : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/30"
             }`}
           >
-            <Calendar className={`w-4.5 h-4.5 ${isSchedulerActive ? "text-[#7c3aed]" : "text-zinc-500"}`} />
-            <span>{lang === "en" ? "Post Scheduler" : "Lên lịch đăng bài"}</span>
-          </a>
-        )}
+            <span className="flex items-center gap-3">
+              <Wand2 className={`w-4.5 h-4.5 ${isAutopostActive ? "text-[#7c3aed]" : "text-zinc-500"}`} />
+              <span>{lang === "en" ? "AI Auto-Post" : "Đăng bài tự động AI"}</span>
+            </span>
+            {isAutopostActive && setActiveTab && (
+              isAutopostOpen ? <ChevronDown className="w-4 h-4 text-[#7c3aed]" /> : <ChevronRight className="w-4 h-4 text-zinc-500" />
+            )}
+          </div>
 
-        {/* Đăng bài tự động AI */}
-        {isAutopostActive && setActiveTab ? (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between px-3.5 py-3 bg-zinc-900 text-zinc-200 rounded-xl text-xs font-bold tracking-wider uppercase shadow-sm">
-              <span className="flex items-center gap-3">
-                <Wand2 className="w-4.5 h-4.5 text-[#7c3aed]" />
-                <span>{lang === "en" ? "AI Auto-Post" : "Đăng bài tự động AI"}</span>
-              </span>
-              <ChevronDown className="w-4 h-4 text-[#7c3aed]" />
-            </div>
+          {/* Submenu Đăng bài tự động AI */}
+          {isAutopostActive && setActiveTab && isAutopostOpen && (
             <div className="pl-4 mt-1.5 flex flex-col gap-1.5 border-l border-zinc-800 ml-5">
               <button 
                 onClick={() => setActiveTab("setup")}
@@ -927,20 +960,8 @@ export default function Sidebar({
                 {lang === "en" ? "Product List" : "Danh sách sản phẩm"}
               </button>
             </div>
-          </div>
-        ) : (
-          <a
-            href="/autopost"
-            className={`flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider ${
-              isAutopostActive
-                ? "bg-zinc-900 text-zinc-200 shadow-sm"
-                : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/30"
-            }`}
-          >
-            <Wand2 className={`w-4.5 h-4.5 ${isAutopostActive ? "text-[#7c3aed]" : "text-zinc-500"}`} />
-            <span>{lang === "en" ? "AI Auto-Post" : "Đăng bài tự động AI"}</span>
-          </a>
-        )}
+          )}
+        </div>
 
         {/* Hộp thư tập trung */}
         <a
@@ -970,20 +991,31 @@ export default function Sidebar({
 
         {/* Cài đặt */}
         <div className="flex flex-col gap-1.5">
-          <a
-            href="/settings/general"
-            className={`flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider ${
+          <div
+            onClick={() => {
+              if (!isSettingsActive) {
+                window.location.href = "/settings/general";
+              } else {
+                setIsSettingsOpenState(!isSettingsOpenState);
+              }
+            }}
+            className={`flex items-center justify-between px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider cursor-pointer ${
               isSettingsActive
                 ? "bg-zinc-900 text-zinc-200 shadow-sm"
                 : "text-zinc-400 hover:text-zinc-255 hover:bg-zinc-900/30"
             }`}
           >
-            <Settings className={`w-4.5 h-4.5 ${isSettingsActive ? "text-[#7c3aed]" : "text-zinc-500"}`} />
-            <span>{lang === "en" ? "Settings" : "Cài đặt"}</span>
-          </a>
+            <span className="flex items-center gap-3">
+              <Settings className={`w-4.5 h-4.5 ${isSettingsActive ? "text-[#7c3aed]" : "text-zinc-500"}`} />
+              <span>{lang === "en" ? "Settings" : "Cài đặt"}</span>
+            </span>
+            {isSettingsActive && (
+              isSettingsOpenState ? <ChevronDown className="w-4 h-4 text-[#7c3aed]" /> : <ChevronRight className="w-4 h-4 text-zinc-500" />
+            )}
+          </div>
 
           {/* Settings Submenu (xổ xuống dưới mục Cài đặt) */}
-          {isSettingsActive && (
+          {isSettingsActive && isSettingsOpenState && (
             <div className="pl-4 pr-1 py-1 flex flex-col gap-1 border-l border-zinc-850 ml-5.5 mt-1 transition-all">
               <a
                 href="/settings/general"

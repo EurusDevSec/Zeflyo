@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
   Home,
-  Calendar,
   MessageSquare,
   Sliders,
   Globe,
@@ -125,7 +124,7 @@ interface UserProfile {
 
 interface SidebarProps {
   currentPath?: string;
-  activeTab?: "setup" | "list" | "automation" | "product_list";
+  activeTab?: "setup" | "list" | "automation" | "product_list" | "topic_setup" | "manage" | "product_setup";
   setActiveTab?: (tab: any) => void;
   user?: UserProfile | null;
   lang?: "en" | "vi";
@@ -151,8 +150,7 @@ export default function Sidebar({
   const resolvedPath = currentPath || pathname || "/";
 
   // Menu collapse/expand states
-  const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
-  const [isAutopostOpen, setIsAutopostOpen] = useState(false);
+  const [isPublishOpen, setIsPublishOpen] = useState(false);
   const [isSettingsOpenState, setIsSettingsOpenState] = useState(false);
 
   // Local state fallbacks (for when props are not provided, e.g. in Settings layout)
@@ -275,8 +273,7 @@ export default function Sidebar({
   }, [propUser]);
 
   useEffect(() => {
-    setIsSchedulerOpen(resolvedPath === "/scheduler");
-    setIsAutopostOpen(resolvedPath === "/autopost");
+    setIsPublishOpen(resolvedPath === "/scheduler" || resolvedPath === "/autopost");
     setIsSettingsOpenState(resolvedPath.startsWith("/settings"));
   }, [resolvedPath]);
 
@@ -645,6 +642,7 @@ export default function Sidebar({
   const isHomeActive = resolvedPath === "/";
   const isSchedulerActive = resolvedPath === "/scheduler";
   const isAutopostActive = resolvedPath === "/autopost";
+  const isPublishActive = isSchedulerActive || isAutopostActive;
   const isChatActive = resolvedPath === "/chat";
   const isRulesActive = resolvedPath === "/rules";
   const isSettingsActive = resolvedPath?.startsWith("/settings");
@@ -831,170 +829,122 @@ export default function Sidebar({
           <span>{lang === "en" ? "Dashboard" : "Trang chủ"}</span>
         </Link>
 
-        {/* Lên lịch đăng bài */}
+        {/* Đăng & Tự động hóa — Unified publish hub */}
         <div className="flex flex-col gap-1.5">
           <div
-            onClick={() => setIsSchedulerOpen(!isSchedulerOpen)}
+            onClick={() => setIsPublishOpen(!isPublishOpen)}
             className={`flex items-center justify-between px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider cursor-pointer ${
-              isSchedulerActive
+              isPublishActive
                 ? "bg-zinc-900 text-zinc-200 shadow-sm"
                 : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/30"
             }`}
           >
             <span className="flex items-center gap-3">
-              <Calendar className={`w-4.5 h-4.5 ${isSchedulerActive ? "text-[#7c3aed]" : "text-zinc-500"}`} />
-              <span>{lang === "en" ? "Post Scheduler" : "Lên lịch đăng bài"}</span>
+              <Wand2 className={`w-4.5 h-4.5 ${isPublishActive ? "text-[#7c3aed]" : "text-zinc-500"}`} />
+              <span>{lang === "en" ? "Publish & Automate" : "Đăng & Tự động hóa"}</span>
             </span>
-            {isSchedulerOpen ? (
+            {isPublishOpen ? (
               <ChevronDown className="w-4 h-4 text-[#7c3aed]" />
             ) : (
               <ChevronRight className="w-4 h-4 text-zinc-500" />
             )}
           </div>
 
-          {/* Submenu Lên lịch đăng bài */}
-          {isSchedulerOpen && (
-            <div className="pl-4 mt-1.5 flex flex-col gap-1.5 border-l border-zinc-800 ml-5">
-              <button 
-                onClick={() => {
-                  if (setActiveTab) {
-                    setActiveTab("setup");
-                  } else {
-                    router.push("/scheduler?tab=setup");
-                  }
-                }}
-                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+          {/* Submenu: Unified Publish Hub */}
+          {isPublishOpen && (
+            <div className="pl-4 mt-1 flex flex-col gap-0.5 border-l border-zinc-800 ml-5">
+
+              {/* --- Lên lịch --- */}
+              <p className="px-2 pt-2 pb-0.5 text-[10px] font-extrabold uppercase tracking-widest text-zinc-600">
+                {lang === "en" ? "📅 Scheduling" : "📅 Lên lịch"}
+              </p>
+              <button
+                onClick={() => router.push("/scheduler?tab=setup")}
+                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   (isSchedulerActive && activeTab === "setup")
-                    ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
-                    : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
+                    ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
                 }`}
               >
-                {lang === "en" ? "Schedule Setup" : "Thiết lập lịch đăng"}
+                {lang === "en" ? "Schedule Posts" : "Lên lịch bài viết"}
               </button>
-              <button 
-                onClick={() => {
-                  if (setActiveTab) {
-                    setActiveTab("list");
-                  } else {
-                    router.push("/scheduler?tab=list");
-                  }
-                }}
-                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              <button
+                onClick={() => router.push("/scheduler?tab=list")}
+                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   (isSchedulerActive && activeTab === "list")
-                    ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
-                    : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
+                    ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
                 }`}
               >
-                {lang === "en" ? "Manage Schedule" : "Quản lý lịch đăng"}
+                {lang === "en" ? "Manage Schedule" : "Quản lý lịch đã đặt"}
               </button>
-              <button 
-                onClick={() => {
-                  if (setActiveTab) {
-                    setActiveTab("automation");
-                  } else {
-                    router.push("/scheduler?tab=automation");
-                  }
-                }}
-                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  (isSchedulerActive && activeTab === "automation")
-                    ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
-                    : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
-                }`}
-              >
-                {lang === "en" ? "Auto Campaigns" : "Kích hoạt tự động hóa"}
-              </button>
-            </div>
-          )}
-        </div>
 
-        {/* Đăng bài tự động AI */}
-        <div className="flex flex-col gap-1.5">
-          <div
-            onClick={() => setIsAutopostOpen(!isAutopostOpen)}
-            className={`flex items-center justify-between px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider cursor-pointer ${
-              isAutopostActive
-                ? "bg-zinc-900 text-zinc-200 shadow-sm"
-                : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/30"
-            }`}
-          >
-            <span className="flex items-center gap-3">
-              <Wand2 className={`w-4.5 h-4.5 ${isAutopostActive ? "text-[#7c3aed]" : "text-zinc-500"}`} />
-              <span>{lang === "en" ? "AI Auto-Post" : "Đăng bài tự động AI"}</span>
-            </span>
-            {isAutopostOpen ? (
-              <ChevronDown className="w-4 h-4 text-[#7c3aed]" />
-            ) : (
-              <ChevronRight className="w-4 h-4 text-zinc-500" />
-            )}
-          </div>
+              {/* --- Tạo bài AI --- */}
+              <p className="px-2 pt-3 pb-0.5 text-[10px] font-extrabold uppercase tracking-widest text-zinc-600">
+                {lang === "en" ? "🤖 AI Content" : "🤖 Tạo bài AI"}
+              </p>
+              <button
+                onClick={() => router.push("/autopost?tab=setup")}
+                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  (isAutopostActive && (activeTab === "setup" || activeTab === "topic_setup"))
+                    ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
+                }`}
+              >
+                {lang === "en" ? "AI Topic Writer" : "Tạo bài theo chủ đề"}
+              </button>
+              <button
+                onClick={() => router.push("/autopost?tab=list")}
+                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  (isAutopostActive && (activeTab === "list" || activeTab === "manage"))
+                    ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
+                }`}
+              >
+                {lang === "en" ? "Manage AI Posts" : "Quản lý bài AI"}
+              </button>
 
-          {/* Submenu Đăng bài tự động AI */}
-          {isAutopostOpen && (
-            <div className="pl-4 mt-1.5 flex flex-col gap-1.5 border-l border-zinc-800 ml-5">
-              <button 
-                onClick={() => {
-                  if (setActiveTab) {
-                    setActiveTab("setup");
-                  } else {
-                    router.push("/autopost?tab=setup");
-                  }
-                }}
-                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  (isAutopostActive && activeTab === "setup")
-                    ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
-                    : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
+              {/* --- Sản phẩm --- */}
+              <p className="px-2 pt-3 pb-0.5 text-[10px] font-extrabold uppercase tracking-widest text-zinc-600">
+                {lang === "en" ? "📦 Products" : "📦 Sản phẩm"}
+              </p>
+              <button
+                onClick={() => router.push("/autopost?tab=automation")}
+                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  (isAutopostActive && (activeTab === "automation" || activeTab === "product_setup"))
+                    ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
                 }`}
               >
-                {lang === "en" ? "Topic Setup" : "Thiết lập từ chủ đề"}
+                {lang === "en" ? "Add Product Post" : "Thêm bài sản phẩm"}
               </button>
-              <button 
-                onClick={() => {
-                  if (setActiveTab) {
-                    setActiveTab("list");
-                  } else {
-                    router.push("/autopost?tab=list");
-                  }
-                }}
-                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  (isAutopostActive && activeTab === "list")
-                    ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
-                    : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
-                }`}
-              >
-                {lang === "en" ? "Manage Setups" : "Quản lý lịch đăng"}
-              </button>
-              <button 
-                onClick={() => {
-                  if (setActiveTab) {
-                    setActiveTab("automation");
-                  } else {
-                    router.push("/autopost?tab=automation");
-                  }
-                }}
-                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  (isAutopostActive && activeTab === "automation")
-                    ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
-                    : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
-                }`}
-              >
-                {lang === "en" ? "Add Product" : "Thêm sản phẩm"}
-              </button>
-              <button 
-                onClick={() => {
-                  if (setActiveTab) {
-                    setActiveTab("product_list");
-                  } else {
-                    router.push("/autopost?tab=product_list");
-                  }
-                }}
-                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              <button
+                onClick={() => router.push("/autopost?tab=product_list")}
+                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   (isAutopostActive && activeTab === "product_list")
-                    ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10" 
-                    : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-900/50"
+                    ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
                 }`}
               >
                 {lang === "en" ? "Product List" : "Danh sách sản phẩm"}
               </button>
+
+              {/* --- Tự động hóa --- */}
+              <p className="px-2 pt-3 pb-0.5 text-[10px] font-extrabold uppercase tracking-widest text-zinc-600">
+                {lang === "en" ? "⚡ Automation" : "⚡ Tự động hóa"}
+              </p>
+              <button
+                onClick={() => router.push("/scheduler?tab=automation")}
+                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  (isSchedulerActive && activeTab === "automation")
+                    ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
+                }`}
+              >
+                {lang === "en" ? "Auto Campaigns" : "Chiến dịch tự động"}
+              </button>
+
+              <div className="pb-1.5" />
             </div>
           )}
         </div>

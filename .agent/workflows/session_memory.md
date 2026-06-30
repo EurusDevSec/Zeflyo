@@ -59,6 +59,7 @@
 *   **Admin identity**: Email cứng `admin@zeflyo.io` được check ở cả frontend (`isAdmin`) và backend middleware.
 *   **Sidebar activeTab prop**: Sidebar nhận `activeTab` từ page để highlight đúng sub-tab. Khi navigate từ trang khác (không có `setActiveTab`), Sidebar dùng `router.push("/scheduler?tab=xxx")` để vừa chuyển trang vừa set tab qua URL.
 *   **Mock Mode**: Token bắt đầu bằng `mock_token_` → frontend chạy hoàn toàn với dữ liệu giả không cần backend. Credits tự cộng +100/ngày cho plan free.
+*   **Mô hình quản lý mới (PM transition)**: Tiến thử sức làm Feature PM & Coordinator (theo dõi tiến độ, backlog, reminder). Hoàng lùi về làm DevOps Lead & Technical Gatekeeper tối cao (quản lý hạ tầng AWS, CI/CD, có quyền phủ quyết/điều chỉnh kế hoạch nếu không hợp lý, duyệt PR staging/main cùng Khoa).
 
 ---
 

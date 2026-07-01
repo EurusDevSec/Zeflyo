@@ -2,24 +2,25 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Fanpage;
-use App\Models\ScheduledPost;
+use App\Jobs\ProcessFacebookWebhookJob;
 use App\Models\AutoReplyRule;
 use App\Models\Customer;
+use App\Models\Fanpage;
 use App\Models\Interaction;
-use App\Jobs\ProcessFacebookWebhookJob;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Artisan;
+use App\Models\ScheduledPost;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Http;
+use Tests\TestCase;
 
 class AutomationTest extends TestCase
 {
     use RefreshDatabase;
 
     private User $user;
+
     private Fanpage $fanpage;
 
     protected function setUp(): void
@@ -29,7 +30,7 @@ class AutomationTest extends TestCase
         $this->user = User::create([
             'name' => 'Test User',
             'email' => 'test@zeflyo.io',
-            'password' => bcrypt('password')
+            'password' => bcrypt('password'),
         ]);
 
         $this->fanpage = Fanpage::create([
@@ -37,7 +38,7 @@ class AutomationTest extends TestCase
             'fb_page_id' => '1234567890',
             'name' => 'Test Fanpage',
             'access_token' => 'mock_page_token_123',
-            'is_active' => true
+            'is_active' => true,
         ]);
     }
 
@@ -47,7 +48,7 @@ class AutomationTest extends TestCase
     public function test_scheduled_post_is_published(): void
     {
         Http::fake([
-            'graph.facebook.com/*' => Http::response(['id' => 'fb_post_999'], 200)
+            'graph.facebook.com/*' => Http::response(['id' => 'fb_post_999'], 200),
         ]);
 
         // Create a pending scheduled post in the past
@@ -57,7 +58,7 @@ class AutomationTest extends TestCase
             'content' => 'Hello this is a scheduled post!',
             'image_url' => null,
             'scheduled_at' => Carbon::now()->subMinute(),
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
 
         // Run the command
@@ -75,7 +76,7 @@ class AutomationTest extends TestCase
     public function test_auto_reply_rule_is_triggered(): void
     {
         Http::fake([
-            'graph.facebook.com/*' => Http::response(['success' => true], 200)
+            'graph.facebook.com/*' => Http::response(['success' => true], 200),
         ]);
 
         // Create an active auto-reply rule
@@ -83,14 +84,14 @@ class AutomationTest extends TestCase
             'fanpage_id' => $this->fanpage->id,
             'keyword' => 'price',
             'reply_content' => 'The price of the item is $10.',
-            'is_active' => true
+            'is_active' => true,
         ]);
 
         // Create customer
         $customer = Customer::create([
             'fanpage_id' => $this->fanpage->id,
             'fb_customer_id' => 'customer_psid_123',
-            'name' => 'John Doe'
+            'name' => 'John Doe',
         ]);
 
         // Mock Webhook Payload for Messenger message
@@ -105,12 +106,12 @@ class AutomationTest extends TestCase
                             'recipient' => ['id' => '1234567890'],
                             'message' => [
                                 'mid' => 'mid.12345',
-                                'text' => 'What is the price of this product?'
-                            ]
-                        ]
-                    ]
-                ]
-            ]
+                                'text' => 'What is the price of this product?',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         // Process webhook job directly
@@ -151,12 +152,12 @@ class AutomationTest extends TestCase
         $response = $this->actingAs($this->user)
             ->postJson('/api/posts/generate-ai', [
                 'topic' => 'Váy hoa mùa hè',
-                'tone' => 'Thân thiện'
+                'tone' => 'Thân thiện',
             ]);
 
         $response->assertStatus(200)
             ->assertJson([
-                'content' => 'Đây là bài viết mẫu tạo từ AI.'
+                'content' => 'Đây là bài viết mẫu tạo từ AI.',
             ]);
     }
 
@@ -168,7 +169,7 @@ class AutomationTest extends TestCase
         $response = $this->actingAs($this->user)
             ->postJson('/api/posts/generate-ai', [
                 // 'topic' is missing
-                'tone' => 'Thân thiện'
+                'tone' => 'Thân thiện',
             ]);
 
         $response->assertStatus(422)

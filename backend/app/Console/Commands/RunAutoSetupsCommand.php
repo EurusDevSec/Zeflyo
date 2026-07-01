@@ -2,15 +2,15 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Models\AutoSetup;
 use App\Jobs\ProcessAutoSetupJob;
+use App\Models\AutoSetup;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Console\Command;
 
 class RunAutoSetupsCommand extends Command
 {
     protected $signature = 'autosetups:run {--force}';
+
     protected $description = 'Check and dispatch auto-setup jobs for campaigns due to publish.';
 
     public function handle(): int
@@ -28,13 +28,14 @@ class RunAutoSetupsCommand extends Command
 
         if ($setups->isEmpty()) {
             $this->info('No active auto-setups found.');
+
             return 0;
         }
 
         $dispatched = 0;
 
         foreach ($setups as $setup) {
-            if (!$this->option('force') && !$this->isScheduleMatch($setup, $currentTime, $currentDayOfWeek, $currentDate)) {
+            if (! $this->option('force') && ! $this->isScheduleMatch($setup, $currentTime, $currentDayOfWeek, $currentDate)) {
                 continue;
             }
 
@@ -44,6 +45,7 @@ class RunAutoSetupsCommand extends Command
         }
 
         $this->info("Dispatched {$dispatched} auto-setup jobs.");
+
         return 0;
     }
 
@@ -64,13 +66,14 @@ class RunAutoSetupsCommand extends Command
             }
         }
 
-        if (!$timeMatch) {
+        if (! $timeMatch) {
             return false;
         }
 
         // Check schedule mode
         if ($setup->schedule_mode === 'weekly') {
             $scheduleDays = $setup->schedule_days ?? [];
+
             return in_array($currentDayOfWeek, $scheduleDays);
         }
 
@@ -79,6 +82,7 @@ class RunAutoSetupsCommand extends Command
             if ($scheduleDate) {
                 return $scheduleDate->toDateString() === $currentDate;
             }
+
             // If no specific date, run today
             return true;
         }

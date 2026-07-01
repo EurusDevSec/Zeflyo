@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'writing_style', 'custom_prompt', 'use_fanpage_info', 'include_contact',
     'contact_info', 'schedule_mode', 'schedule_days', 'schedule_date',
     'schedule_times', 'auto_post', 'auto_repeat', 'publish_mode',
-    'auto_comment', 'status'
+    'auto_comment', 'status',
 ])]
 class AutoSetup extends Model
 {

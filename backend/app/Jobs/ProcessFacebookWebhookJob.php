@@ -2,15 +2,15 @@
 
 namespace App\Jobs;
 
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
-
+use App\Events\MessageReceived;
 use App\Events\MessageSent;
 use App\Models\AutoReplyRule;
 use App\Models\Customer;
 use App\Models\Fanpage;
 use App\Models\Interaction;
 use App\Services\GeminiService;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -39,6 +39,7 @@ class ProcessFacebookWebhookJob implements ShouldQueue
         // Verify the object type is 'page'
         if (($this->payload['object'] ?? '') !== 'page') {
             Log::warning('Unsupported webhook object type:', ['object' => $this->payload['object'] ?? null]);
+
             return;
         }
 
@@ -46,19 +47,23 @@ class ProcessFacebookWebhookJob implements ShouldQueue
 
         foreach ($entries as $entry) {
             $fbPageId = $entry['id'] ?? null;
-            if (!$fbPageId) continue;
+            if (! $fbPageId) {
+                continue;
+            }
 
             // Find the corresponding Fanpage in our database
             $fanpage = Fanpage::where('fb_page_id', $fbPageId)->first();
 
-            if (!$fanpage) {
+            if (! $fanpage) {
                 Log::warning("Received webhook event for untracked Fanpage: {$fbPageId}");
+
                 continue;
             }
 
             // Only process events if automation is active for this page
-            if (!$fanpage->is_active) {
+            if (! $fanpage->is_active) {
                 Log::info("Automation is disabled for Fanpage: {$fanpage->name} ({$fbPageId}). Skipping.");
+
                 continue;
             }
 
@@ -81,14 +86,14 @@ class ProcessFacebookWebhookJob implements ShouldQueue
     {
         foreach ($messagingEvents as $event) {
             // We only care about message text events from customers
-            $senderId = $event['sender']['id'] ?? null; //giá trị có thể nhận null
-            $recipientId = $event['recipient']['id'] ?? null; //giá trị có thể nhận null
-            
+            $senderId = $event['sender']['id'] ?? null; // giá trị có thể nhận null
+            $recipientId = $event['recipient']['id'] ?? null; // giá trị có thể nhận null
+
             // If sender is the page itself, it's an outgoing response (we can log it as page response)
             $isFromCustomer = ($senderId !== $fanpage->fb_page_id);
-            
+
             $message = $event['message'] ?? null;
-            if (!$message || !isset($message['text'])) {
+            if (! $message || ! isset($message['text'])) {
                 continue;
             }
 
@@ -97,7 +102,9 @@ class ProcessFacebookWebhookJob implements ShouldQueue
 
             // Find or create customer
             $customerPsid = $isFromCustomer ? $senderId : $recipientId;
-            if (!$customerPsid) continue;
+            if (! $customerPsid) {
+                continue;
+            }
 
             $customer = $this->getOrCreateCustomer($customerPsid, $fanpage);
 
@@ -115,9 +122,9 @@ class ProcessFacebookWebhookJob implements ShouldQueue
 
             // Broadcast the new message event in real-time
             // broadcast(...) trả về PendingBroadcast()->toOthers()
-            broadcast(new \App\Events\MessageReceived($interaction, $customer))->toOthers();
+            broadcast(new MessageReceived($interaction, $customer))->toOthers();
 
-            Log::info("Saved Messenger interaction in DB. From Customer: " . ($isFromCustomer ? 'Yes' : 'No'));
+            Log::info('Saved Messenger interaction in DB. From Customer: '.($isFromCustomer ? 'Yes' : 'No'));
 
             // Auto-reply logic: Only if the incoming message is from a customer
             if ($isFromCustomer) {
@@ -132,10 +139,12 @@ class ProcessFacebookWebhookJob implements ShouldQueue
     protected function processChanges(array $changes, Fanpage $fanpage): void
     {
         foreach ($changes as $change) {
-            if (($change['field'] ?? '') !== 'feed') continue;
+            if (($change['field'] ?? '') !== 'feed') {
+                continue;
+            }
 
             $value = $change['value'] ?? null;
-            if (!$value || ($value['item'] ?? '') !== 'comment' || ($value['verb'] ?? '') !== 'add') {
+            if (! $value || ($value['item'] ?? '') !== 'comment' || ($value['verb'] ?? '') !== 'add') {
                 continue;
             }
 
@@ -144,14 +153,18 @@ class ProcessFacebookWebhookJob implements ShouldQueue
             $message = $value['message'] ?? null;
             $from = $value['from'] ?? null;
 
-            if (!$commentId || !$message || !$from) continue;
+            if (! $commentId || ! $message || ! $from) {
+                continue;
+            }
 
             $senderId = $from['id'] ?? null;
             $senderName = $from['name'] ?? 'Guest';
 
             // Ignore if comment is made by the page itself to prevent infinite loops
             $isFromCustomer = ($senderId !== $fanpage->fb_page_id);
-            if (!$isFromCustomer) continue;
+            if (! $isFromCustomer) {
+                continue;
+            }
 
             // Get or create customer
             $customer = $this->getOrCreateCustomer($senderId, $fanpage, $senderName);
@@ -170,7 +183,7 @@ class ProcessFacebookWebhookJob implements ShouldQueue
             );
 
             // Broadcast the new comment event in real-time
-            broadcast(new \App\Events\MessageReceived($interaction, $customer))->toOthers();
+            broadcast(new MessageReceived($interaction, $customer))->toOthers();
 
             Log::info("Saved Fanpage Comment interaction in DB: {$senderName} - \"{$message}\"");
 
@@ -186,8 +199,8 @@ class ProcessFacebookWebhookJob implements ShouldQueue
     protected function checkAndTriggerAutoReply(string $text, Customer $customer, Fanpage $fanpage, string $type, string $fbItemId, ?string $postId = null): void
     {
         $incomingText = mb_strtolower(trim($text));
-        
-        $rules = \App\Models\AutoReplyRule::where('fanpage_id', $fanpage->id)
+
+        $rules = AutoReplyRule::where('fanpage_id', $fanpage->id)
             ->where('is_active', true)
             ->get();
 
@@ -196,7 +209,7 @@ class ProcessFacebookWebhookJob implements ShouldQueue
 
         foreach ($rules as $rule) {
             $keyword = mb_strtolower(trim($rule->keyword));
-            
+
             // Check for keyword containment
             if ($incomingText === $keyword || mb_strpos($incomingText, $keyword) !== false) {
                 Log::info("Auto-reply rule matched! Keyword: {$rule->keyword}, Reply Content: {$rule->reply_content}");
@@ -209,17 +222,18 @@ class ProcessFacebookWebhookJob implements ShouldQueue
         // When user message does not match any keyword and AI is active for the customer, call Gemini API
         if ($replyText === null && $customer->ai_active) {
             $systemPrompt = 'Bạn là trợ lý AI của cửa hàng chuyên bán các khóa học AI và cung cấp tài khoản AI giá rẻ (như ChatGPT Plus, Midjourney, Canva Pro, Netflix, Zoom Pro, v.v.). Hãy trả lời khách hàng một cách lịch sự, ngắn gọn, chuyên nghiệp. Nếu khách hỏi về giá hoặc sản phẩm cụ thể mà bạn không biết, hãy mời khách để lại thông tin và nhân viên sẽ liên hệ lại. Trả lời bằng tiếng Việt. Đặc biệt, không được bịa bất cứ thông tin nào về giá cả, sản phẩm nếu bạn không chắc chắn.';
-            $replyText = (new GeminiService())->generateReply($text, $systemPrompt);
+            $replyText = (new GeminiService)->generateReply($text, $systemPrompt);
             $replySource = $replyText ? 'ai' : null;
         }
 
         if ($replyText === null) {
             Log::info('No auto-reply generated for interaction.', ['customer_id' => $customer->id, 'fanpage_id' => $fanpage->id]);
+
             return;
         }
 
-        $replyFbItemId = 'auto_reply.' . uniqid() . '.' . time();
-        
+        $replyFbItemId = 'auto_reply.'.uniqid().'.'.time();
+
         // Save outgoing automated interaction in DB
         $interaction = Interaction::create([
             'customer_id' => $customer->id,
@@ -235,12 +249,12 @@ class ProcessFacebookWebhookJob implements ShouldQueue
         // Call Meta APIs to send response back
         if ($type === 'message') {
             $this->sendFacebookMessage($customer->fb_customer_id, $replyText, $fanpage);
-        } else if ($type === 'comment') {
+        } elseif ($type === 'comment') {
             $this->sendFacebookCommentReply($fbItemId, $replyText, $fanpage);
         }
 
         // Broadcast message sent event so it updates dynamically in the Live Chat UI
-        broadcast(new \App\Events\MessageSent($interaction, $customer))->toOthers();
+        broadcast(new MessageSent($interaction, $customer))->toOthers();
     }
 
     /**
@@ -252,24 +266,28 @@ class ProcessFacebookWebhookJob implements ShouldQueue
             $pageToken = $fanpage->access_token;
             if ($pageToken === 'mock_page_token_123') {
                 Log::info("Mock Facebook Message Sent: To={$recipientPsid}, Msg=\"{$text}\"");
+
                 return true;
             }
 
-            $response = Http::post("https://graph.facebook.com/v20.0/me/messages", [
+            $response = Http::post('https://graph.facebook.com/v20.0/me/messages', [
                 'recipient' => ['id' => $recipientPsid],
                 'message' => ['text' => $text],
-                'access_token' => $pageToken
+                'access_token' => $pageToken,
             ]);
 
             if ($response->successful()) {
                 Log::info("Facebook Message Sent successfully to PSID: {$recipientPsid}");
+
                 return true;
             }
 
-            Log::error("Facebook Send Message API failed: " . $response->body());
+            Log::error('Facebook Send Message API failed: '.$response->body());
+
             return false;
         } catch (\Exception $e) {
-            Log::error("Exception in Facebook Send Message API: " . $e->getMessage());
+            Log::error('Exception in Facebook Send Message API: '.$e->getMessage());
+
             return false;
         }
     }
@@ -283,23 +301,27 @@ class ProcessFacebookWebhookJob implements ShouldQueue
             $pageToken = $fanpage->access_token;
             if ($pageToken === 'mock_page_token_123') {
                 Log::info("Mock Facebook Comment Reply: CommentID={$commentId}, Reply=\"{$text}\"");
+
                 return true;
             }
 
             $response = Http::post("https://graph.facebook.com/v20.0/{$commentId}/comments", [
                 'message' => $text,
-                'access_token' => $pageToken
+                'access_token' => $pageToken,
             ]);
 
             if ($response->successful()) {
                 Log::info("Facebook Comment Reply Sent successfully to Comment ID: {$commentId}");
+
                 return true;
             }
 
-            Log::error("Facebook Comment Reply API failed: " . $response->body());
+            Log::error('Facebook Comment Reply API failed: '.$response->body());
+
             return false;
         } catch (\Exception $e) {
-            Log::error("Exception in Facebook Comment Reply API: " . $e->getMessage());
+            Log::error('Exception in Facebook Comment Reply API: '.$e->getMessage());
+
             return false;
         }
     }
@@ -324,10 +346,10 @@ class ProcessFacebookWebhookJob implements ShouldQueue
         try {
             // Page access token is auto-decrypted via Eloquent cast
             $pageToken = $fanpage->access_token;
-            
+
             $response = Http::get("https://graph.facebook.com/v20.0/{$psid}", [
                 'fields' => 'first_name,last_name,profile_pic',
-                'access_token' => $pageToken
+                'access_token' => $pageToken,
             ]);
 
             if ($response->successful()) {
@@ -339,7 +361,7 @@ class ProcessFacebookWebhookJob implements ShouldQueue
             }
         } catch (\Exception $e) {
             Log::error("Failed to fetch customer profile info from Meta Graph API for PSID: {$psid}", [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
 
@@ -347,7 +369,7 @@ class ProcessFacebookWebhookJob implements ShouldQueue
             'fanpage_id' => $fanpage->id,
             'fb_customer_id' => $psid,
             'name' => $name,
-            'avatar_url' => $avatarUrl
+            'avatar_url' => $avatarUrl,
         ]);
     }
 }

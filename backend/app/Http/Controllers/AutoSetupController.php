@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\AutoSetup;
+use Illuminate\Http\Request;
 
 class AutoSetupController extends Controller
 {
@@ -19,7 +19,7 @@ class AutoSetupController extends Controller
         }
 
         if ($request->has('search') && $request->input('search')) {
-            $query->where('name', 'ilike', '%' . $request->input('search') . '%');
+            $query->where('name', 'ilike', '%'.$request->input('search').'%');
         }
 
         $setups = $query->orderBy('updated_at', 'desc')->get();
@@ -59,9 +59,9 @@ class AutoSetupController extends Controller
         // Verify user owns all target fanpages
         $userFanpageIds = $request->user()->fanpages()->pluck('id')->toArray();
         foreach ($request->input('fanpage_ids') as $id) {
-            if (!in_array($id, $userFanpageIds)) {
+            if (! in_array($id, $userFanpageIds)) {
                 return response()->json([
-                    'error' => "Unauthorized: fanpage ID {$id} does not belong to you."
+                    'error' => "Unauthorized: fanpage ID {$id} does not belong to you.",
                 ], 403);
             }
         }

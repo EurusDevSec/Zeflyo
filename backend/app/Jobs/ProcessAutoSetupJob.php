@@ -2,16 +2,16 @@
 
 namespace App\Jobs;
 
+use App\Models\AutoSetup;
+use App\Models\Fanpage;
+use App\Models\Product;
+use App\Models\Topic;
+use App\Services\GeminiService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Models\AutoSetup;
-use App\Models\Topic;
-use App\Models\Fanpage;
-use App\Models\Product;
-use App\Services\GeminiService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -30,8 +30,9 @@ class ProcessAutoSetupJob implements ShouldQueue
     {
         $setup = AutoSetup::with('topics')->find($this->autoSetupId);
 
-        if (!$setup || $setup->status !== 'active') {
+        if (! $setup || $setup->status !== 'active') {
             Log::info("AutoSetup #{$this->autoSetupId}: skipped (not found or not active).");
+
             return;
         }
 
@@ -52,7 +53,7 @@ class ProcessAutoSetupJob implements ShouldQueue
     {
         $topic = $setup->nextPendingTopic();
 
-        if (!$topic) {
+        if (! $topic) {
             // All topics processed
             if ($setup->auto_repeat) {
                 Log::info("AutoSetup #{$setup->id}: all topics done, repeating...");
@@ -61,25 +62,27 @@ class ProcessAutoSetupJob implements ShouldQueue
             } else {
                 $setup->update(['status' => 'completed']);
                 Log::info("AutoSetup #{$setup->id}: all topics done, marking completed.");
+
                 return;
             }
         }
 
-        if (!$topic) {
+        if (! $topic) {
             return;
         }
 
-        $gemini = new GeminiService();
+        $gemini = new GeminiService;
         $config = $this->buildConfig($setup);
 
         $content = $gemini->generatePostFromTopic($topic->title, $config);
 
-        if (!$content) {
+        if (! $content) {
             $topic->update([
                 'status' => 'failed',
                 'error_log' => 'AI content generation failed.',
             ]);
             Log::error("AutoSetup #{$setup->id}, Topic #{$topic->id}: AI generation failed.");
+
             return;
         }
 
@@ -90,6 +93,7 @@ class ProcessAutoSetupJob implements ShouldQueue
             $topic->status = 'generated';
             $topic->save();
             Log::info("AutoSetup #{$setup->id}, Topic #{$topic->id}: content generated, awaiting review.");
+
             return;
         }
 
@@ -103,7 +107,9 @@ class ProcessAutoSetupJob implements ShouldQueue
     private function processProductSource(AutoSetup $setup): void
     {
         $user = $setup->user;
-        if (!$user) return;
+        if (! $user) {
+            return;
+        }
 
         // Get products that are enabled and haven't been posted recently for this setup
         // We use a simple approach: track via topics table with product name as title
@@ -116,13 +122,13 @@ class ProcessAutoSetupJob implements ShouldQueue
         $nextProduct = null;
         foreach ($products as $product) {
             $marker = "[product:{$product->id}]";
-            if (!in_array($marker, $existingTopicTitles)) {
+            if (! in_array($marker, $existingTopicTitles)) {
                 $nextProduct = $product;
                 break;
             }
         }
 
-        if (!$nextProduct) {
+        if (! $nextProduct) {
             if ($setup->auto_repeat) {
                 Log::info("AutoSetup #{$setup->id}: all products done, repeating...");
                 $setup->topics()->delete();
@@ -130,11 +136,14 @@ class ProcessAutoSetupJob implements ShouldQueue
             } else {
                 $setup->update(['status' => 'completed']);
                 Log::info("AutoSetup #{$setup->id}: all products done, completed.");
+
                 return;
             }
         }
 
-        if (!$nextProduct) return;
+        if (! $nextProduct) {
+            return;
+        }
 
         // Create a topic record to track this product post
         $topic = Topic::create([
@@ -146,7 +155,7 @@ class ProcessAutoSetupJob implements ShouldQueue
             'generated_image_url' => ($nextProduct->image_urls && count($nextProduct->image_urls) > 0) ? $nextProduct->image_urls[0] : null,
         ]);
 
-        $gemini = new GeminiService();
+        $gemini = new GeminiService;
         $config = $this->buildConfig($setup);
 
         $content = $gemini->generatePostFromProduct([
@@ -154,8 +163,9 @@ class ProcessAutoSetupJob implements ShouldQueue
             'description' => $nextProduct->description,
         ], $config);
 
-        if (!$content) {
+        if (! $content) {
             $topic->update(['status' => 'failed', 'error_log' => 'AI product content generation failed.']);
+
             return;
         }
 
@@ -164,6 +174,7 @@ class ProcessAutoSetupJob implements ShouldQueue
         if ($setup->publish_mode === 'review') {
             $topic->status = 'generated';
             $topic->save();
+
             return;
         }
 
@@ -182,8 +193,9 @@ class ProcessAutoSetupJob implements ShouldQueue
 
         foreach ($fanpageIds as $fanpageId) {
             $fanpage = Fanpage::find($fanpageId);
-            if (!$fanpage) {
+            if (! $fanpage) {
                 $errors[] = "Fanpage {$fanpageId} not found.";
+
                 continue;
             }
 
@@ -193,8 +205,9 @@ class ProcessAutoSetupJob implements ShouldQueue
 
                 // Mock mode support
                 if ($pageToken === 'mock_page_token_123') {
-                    Log::info("Mock AutoPost: Page {$fbPageId}, Content=\"" . mb_substr($topic->generated_content, 0, 100) . "...\"");
-                    $postId = 'mock_post_' . time();
+                    Log::info("Mock AutoPost: Page {$fbPageId}, Content=\"".mb_substr($topic->generated_content, 0, 100).'..."');
+                    $postId = 'mock_post_'.time();
+
                     continue;
                 }
 
@@ -225,12 +238,12 @@ class ProcessAutoSetupJob implements ShouldQueue
                         Log::info("AutoSetup #{$setup->id}: auto-comment posted on {$postId}");
                     }
                 } else {
-                    $errors[] = "Page {$fbPageId}: " . $response->body();
-                    Log::error("AutoSetup publish error: " . $response->body());
+                    $errors[] = "Page {$fbPageId}: ".$response->body();
+                    Log::error('AutoSetup publish error: '.$response->body());
                 }
             } catch (\Exception $e) {
-                $errors[] = "Page {$fanpageId}: " . $e->getMessage();
-                Log::error("AutoSetup publish exception: " . $e->getMessage());
+                $errors[] = "Page {$fanpageId}: ".$e->getMessage();
+                Log::error('AutoSetup publish exception: '.$e->getMessage());
             }
         }
 
@@ -277,18 +290,18 @@ class ProcessAutoSetupJob implements ShouldQueue
      */
     private function getPublicImageUrl(?string $url): ?string
     {
-        if (!$url) {
+        if (! $url) {
             return null;
         }
 
-        if (!str_contains($url, 'localhost') && !str_contains($url, '127.0.0.1') && !str_contains($url, 'host.docker.internal')) {
+        if (! str_contains($url, 'localhost') && ! str_contains($url, '127.0.0.1') && ! str_contains($url, 'host.docker.internal')) {
             return $url;
         }
 
         $parsed = parse_url($url);
         $path = $parsed['path'] ?? '';
-        $query = isset($parsed['query']) ? '?' . $parsed['query'] : '';
+        $query = isset($parsed['query']) ? '?'.$parsed['query'] : '';
 
-        return 'https://zeflyo-dev.loca.lt' . $path . $query;
+        return 'https://zeflyo-dev.loca.lt'.$path.$query;
     }
 }

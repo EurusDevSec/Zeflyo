@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
@@ -15,6 +16,7 @@ class UserController extends Controller
     {
         $user = $request->user();
         $user->checkAndAwardDailyFreeCredits();
+
         return response()->json([
             'id' => $user->uid ?? $user->id,
             'name' => $user->name,
@@ -66,7 +68,7 @@ class UserController extends Controller
                 'referral_phone' => $user->referral_phone,
                 'last_checkin_at' => $user->last_checkin_at ? $user->last_checkin_at->toIso8601String() : null,
                 'checkin_history' => $this->getCheckinHistory($user),
-            ]
+            ],
         ]);
     }
 
@@ -77,24 +79,24 @@ class UserController extends Controller
     {
         $user = $request->user();
         $userTimezone = $user->timezone ?? 'Asia/Ho_Chi_Minh';
-        $todayString = \Carbon\Carbon::now($userTimezone)->format('Y-m-d');
+        $todayString = Carbon::now($userTimezone)->format('Y-m-d');
 
         $alreadyCheckedIn = $user->checkins()->where('checkin_date', $todayString)->exists();
         if ($alreadyCheckedIn) {
             return response()->json([
                 'message' => 'Bạn đã điểm danh hôm nay rồi. Hãy quay lại vào ngày mai nhé!',
                 'errors' => [
-                    'checkin' => ['Already checked in today.']
-                ]
+                    'checkin' => ['Already checked in today.'],
+                ],
             ], 400);
         }
 
         $user->checkins()->create([
-            'checkin_date' => $todayString
+            'checkin_date' => $todayString,
         ]);
 
         $user->credits = ($user->credits ?? 0) + 50;
-        $user->last_checkin_at = \Carbon\Carbon::now();
+        $user->last_checkin_at = Carbon::now();
         $user->save();
 
         return response()->json([
@@ -113,7 +115,7 @@ class UserController extends Controller
                 'referral_phone' => $user->referral_phone,
                 'last_checkin_at' => $user->last_checkin_at ? $user->last_checkin_at->toIso8601String() : null,
                 'checkin_history' => $this->getCheckinHistory($user),
-            ]
+            ],
         ]);
     }
 
@@ -123,11 +125,11 @@ class UserController extends Controller
     protected function getCheckinHistory($user): array
     {
         return $user->checkins()
-            ->whereMonth('checkin_date', \Carbon\Carbon::now()->month)
-            ->whereYear('checkin_date', \Carbon\Carbon::now()->year)
+            ->whereMonth('checkin_date', Carbon::now()->month)
+            ->whereYear('checkin_date', Carbon::now()->year)
             ->pluck('checkin_date')
-            ->map(function($date) {
-                return $date instanceof \DateTimeInterface ? $date->format('Y-m-d') : \Carbon\Carbon::parse($date)->format('Y-m-d');
+            ->map(function ($date) {
+                return $date instanceof \DateTimeInterface ? $date->format('Y-m-d') : Carbon::parse($date)->format('Y-m-d');
             })
             ->toArray();
     }
@@ -144,12 +146,12 @@ class UserController extends Controller
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
         ]);
 
-        if (!Hash::check($request->input('current_password'), $user->password)) {
+        if (! Hash::check($request->input('current_password'), $user->password)) {
             return response()->json([
                 'message' => 'The provided password does not match your current password.',
                 'errors' => [
-                    'current_password' => ['Mật khẩu hiện tại không chính xác.']
-                ]
+                    'current_password' => ['Mật khẩu hiện tại không chính xác.'],
+                ],
             ], 422);
         }
 
@@ -158,7 +160,7 @@ class UserController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Password updated successfully'
+            'message' => 'Password updated successfully',
         ]);
     }
 }

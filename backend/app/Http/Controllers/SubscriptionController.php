@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\User;
 use App\Models\PendingPayment;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class SubscriptionController extends Controller
@@ -16,10 +17,10 @@ class SubscriptionController extends Controller
     public function getPlans()
     {
         return response()->json([
-            [ "id" => "basic",    "name" => "Basic",     "price" => 79000,   "currency" => "VND", "period" => "month" ],
-            [ "id" => "pro",      "name" => "Pro",       "price" => 179000,  "currency" => "VND", "period" => "month", "recommended" => true ],
-            [ "id" => "premium",  "name" => "Premium",   "price" => 249000,  "currency" => "VND", "period" => "month" ],
-            [ "id" => "vip",      "name" => "VIP",       "price" => null,    "currency" => null,  "contact" => true ]
+            ['id' => 'basic',    'name' => 'Basic',     'price' => 79000,   'currency' => 'VND', 'period' => 'month'],
+            ['id' => 'pro',      'name' => 'Pro',       'price' => 179000,  'currency' => 'VND', 'period' => 'month', 'recommended' => true],
+            ['id' => 'premium',  'name' => 'Premium',   'price' => 249000,  'currency' => 'VND', 'period' => 'month'],
+            ['id' => 'vip',      'name' => 'VIP',       'price' => null,    'currency' => null,  'contact' => true],
         ]);
     }
 
@@ -30,10 +31,11 @@ class SubscriptionController extends Controller
     {
         $user = $request->user();
         $user->checkAndAwardDailyFreeCredits();
+
         return response()->json([
             'plan' => $user->subscription_plan ?? 'free',
             'expires_at' => $user->subscription_expires_at,
-            'credits' => $user->credits ?? 0
+            'credits' => $user->credits ?? 0,
         ]);
     }
 
@@ -52,7 +54,7 @@ class SubscriptionController extends Controller
 
         // Generate a unique payment description code (e.g., ZF8B3K5D)
         do {
-            $code = 'ZF' . strtoupper(Str::random(8));
+            $code = 'ZF'.strtoupper(Str::random(8));
         } while (PendingPayment::where('code', $code)->exists());
 
         $payment = PendingPayment::create([
@@ -72,7 +74,7 @@ class SubscriptionController extends Controller
                 'code' => 'VCB',
                 'account_number' => '1002202688888',
                 'account_name' => 'CONG TY CO PHAN ZEFLYO',
-            ]
+            ],
         ]);
     }
 
@@ -84,10 +86,10 @@ class SubscriptionController extends Controller
         $code = $request->input('code') ?? $request->input('content') ?? $request->input('description');
         $amount = $request->input('amount') ?? $request->input('transferAmount');
 
-        if (!$code) {
+        if (! $code) {
             return response()->json([
                 'success' => false,
-                'message' => 'Transaction code is missing'
+                'message' => 'Transaction code is missing',
             ], 400);
         }
 
@@ -96,31 +98,31 @@ class SubscriptionController extends Controller
         // Find the payment
         $payment = PendingPayment::where('code', $code)->first();
 
-        if (!$payment) {
+        if (! $payment) {
             return response()->json([
                 'success' => false,
-                'message' => 'Pending payment not found'
+                'message' => 'Pending payment not found',
             ], 404);
         }
 
         if ($payment->status === 'completed') {
             return response()->json([
                 'success' => true,
-                'message' => 'Payment has already been processed successfully'
+                'message' => 'Payment has already been processed successfully',
             ], 200);
         }
 
         if ($payment->status === 'cancelled') {
             return response()->json([
                 'success' => false,
-                'message' => 'Payment was already cancelled by the user'
+                'message' => 'Payment was already cancelled by the user',
             ], 400);
         }
 
         if ($payment->status === 'failed') {
             return response()->json([
                 'success' => false,
-                'message' => 'Payment has failed or timed out'
+                'message' => 'Payment has failed or timed out',
             ], 400);
         }
 
@@ -131,7 +133,7 @@ class SubscriptionController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Payment has expired and is automatically cancelled'
+                'message' => 'Payment has expired and is automatically cancelled',
             ], 400);
         }
 
@@ -194,7 +196,7 @@ class SubscriptionController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Payment processed successfully'
+            'message' => 'Payment processed successfully',
         ]);
     }
 
@@ -204,15 +206,15 @@ class SubscriptionController extends Controller
     public function cancelSubscription(Request $request)
     {
         $user = $request->user();
-        
+
         $reasons = $request->input('reasons', []);
         $feedback = $request->input('feedback', '');
 
         // Log the cancellation reasons for analysis
-        \Illuminate\Support\Facades\Log::info("User ID {$user->id} (" . ($user->email ?? 'unknown') . ") cancelled subscription.", [
+        Log::info("User ID {$user->id} (".($user->email ?? 'unknown').') cancelled subscription.', [
             'reasons' => $reasons,
             'feedback' => $feedback,
-            'previous_plan' => $user->subscription_plan
+            'previous_plan' => $user->subscription_plan,
         ]);
 
         $user->subscription_plan = 'free';
@@ -227,8 +229,8 @@ class SubscriptionController extends Controller
             'subscription' => [
                 'plan' => 'free',
                 'expires_at' => null,
-                'credits' => $user->credits
-            ]
+                'credits' => $user->credits,
+            ],
         ]);
     }
 
@@ -251,7 +253,7 @@ class SubscriptionController extends Controller
 
         return response()->json([
             'success' => true,
-            'payments' => $payments
+            'payments' => $payments,
         ]);
     }
 
@@ -266,10 +268,10 @@ class SubscriptionController extends Controller
             ->where('status', 'pending')
             ->first();
 
-        if (!$payment) {
+        if (! $payment) {
             return response()->json([
                 'success' => false,
-                'message' => 'Pending payment not found'
+                'message' => 'Pending payment not found',
             ], 404);
         }
 
@@ -278,7 +280,7 @@ class SubscriptionController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Payment cancelled successfully'
+            'message' => 'Payment cancelled successfully',
         ]);
     }
 }

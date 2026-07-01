@@ -2,12 +2,12 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Models\ScheduledPost;
 use App\Models\Fanpage;
+use App\Models\ScheduledPost;
+use Carbon\Carbon;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class PublishScheduledPosts extends Command
 {
@@ -38,6 +38,7 @@ class PublishScheduledPosts extends Command
 
         if ($posts->isEmpty()) {
             $this->info('No pending scheduled posts to publish.');
+
             return 0;
         }
 
@@ -48,6 +49,7 @@ class PublishScheduledPosts extends Command
         }
 
         $this->info('Scheduled posts processing completed.');
+
         return 0;
     }
 
@@ -57,7 +59,7 @@ class PublishScheduledPosts extends Command
     private function publishPost(ScheduledPost $post)
     {
         $this->info("Processing post ID {$post->id}...");
-        
+
         $fanpageIds = $post->fanpage_ids;
         $failedPages = [];
         $successPages = [];
@@ -66,9 +68,10 @@ class PublishScheduledPosts extends Command
         foreach ($fanpageIds as $fanpageId) {
             $fanpage = Fanpage::find($fanpageId);
 
-            if (!$fanpage) {
+            if (! $fanpage) {
                 $failedPages[] = $fanpageId;
                 $errors[] = "Fanpage ID {$fanpageId} not found in local database.";
+
                 continue;
             }
 
@@ -79,6 +82,7 @@ class PublishScheduledPosts extends Command
                 if ($pageToken === 'mock_page_token_123') {
                     Log::info("Mock Facebook Publish: Page ID {$fbPageId}, Content=\"{$post->content}\", Image=\"{$post->image_url}\"");
                     $successPages[] = $fbPageId;
+
                     continue;
                 }
 
@@ -87,13 +91,13 @@ class PublishScheduledPosts extends Command
                     $response = Http::post("https://graph.facebook.com/v20.0/{$fbPageId}/photos", [
                         'url' => $post->image_url,
                         'caption' => $post->content,
-                        'access_token' => $pageToken
+                        'access_token' => $pageToken,
                     ]);
                 } else {
                     // Post feed status
                     $response = Http::post("https://graph.facebook.com/v20.0/{$fbPageId}/feed", [
                         'message' => $post->content,
-                        'access_token' => $pageToken
+                        'access_token' => $pageToken,
                     ]);
                 }
 
@@ -101,13 +105,13 @@ class PublishScheduledPosts extends Command
                     $successPages[] = $fbPageId;
                 } else {
                     $failedPages[] = $fbPageId;
-                    $errors[] = "Fanpage ID {$fanpageId} (FB Page {$fbPageId}) failed: " . $response->body();
-                    Log::error("Facebook Publish error for page {$fbPageId}: " . $response->body());
+                    $errors[] = "Fanpage ID {$fanpageId} (FB Page {$fbPageId}) failed: ".$response->body();
+                    Log::error("Facebook Publish error for page {$fbPageId}: ".$response->body());
                 }
             } catch (\Exception $e) {
                 $failedPages[] = $fanpageId;
-                $errors[] = "Exception for Fanpage ID {$fanpageId}: " . $e->getMessage();
-                Log::error("Facebook Publish exception: " . $e->getMessage());
+                $errors[] = "Exception for Fanpage ID {$fanpageId}: ".$e->getMessage();
+                Log::error('Facebook Publish exception: '.$e->getMessage());
             }
         }
 

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Product;
+use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
@@ -15,7 +15,7 @@ class ProductController extends Controller
         $query = $request->user()->products();
 
         if ($request->has('search') && $request->input('search')) {
-            $query->where('name', 'ilike', '%' . $request->input('search') . '%');
+            $query->where('name', 'ilike', '%'.$request->input('search').'%');
         }
 
         if ($request->has('enabled')) {

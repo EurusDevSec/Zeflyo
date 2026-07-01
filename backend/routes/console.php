@@ -8,5 +8,6 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 use Illuminate\Support\Facades\Schedule;
+
 Schedule::command('posts:publish')->everyMinute();
 Schedule::command('autosetups:run')->everyMinute();

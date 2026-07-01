@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'user_id', 'auto_setup_id', 'title', 'status', 'generated_content',
-    'generated_image_url', 'fb_post_id', 'error_log', 'sort_order'
+    'generated_image_url', 'fb_post_id', 'error_log', 'sort_order',
 ])]
 class Topic extends Model
 {

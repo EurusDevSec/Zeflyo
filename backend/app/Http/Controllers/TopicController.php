@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\AutoSetup;
-use App\Models\Topic;
 use App\Models\Fanpage;
+use App\Models\Topic;
 use App\Services\GeminiService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -95,12 +95,12 @@ class TopicController extends Controller
         $count = $request->input('count', 30);
         $language = $setup->language ?? 'vi';
 
-        $service = new GeminiService();
+        $service = new GeminiService;
         $topics = $service->generateTopicsList($prompt, $count, $language);
 
-        if ($topics === null || !is_array($topics)) {
+        if ($topics === null || ! is_array($topics)) {
             return response()->json([
-                'error' => 'Không thể sinh chủ đề bằng AI. Vui lòng thử lại sau.'
+                'error' => 'Không thể sinh chủ đề bằng AI. Vui lòng thử lại sau.',
             ], 500);
         }
 
@@ -108,7 +108,9 @@ class TopicController extends Controller
         $createdTopics = [];
 
         foreach ($topics as $index => $title) {
-            if (!is_string($title) || trim($title) === '') continue;
+            if (! is_string($title) || trim($title) === '') {
+                continue;
+            }
 
             $createdTopics[] = Topic::create([
                 'user_id' => $request->user()->id,
@@ -120,7 +122,7 @@ class TopicController extends Controller
         }
 
         return response()->json([
-            'message' => 'Generated ' . count($createdTopics) . ' topics successfully.',
+            'message' => 'Generated '.count($createdTopics).' topics successfully.',
             'topics' => $createdTopics,
         ]);
     }
@@ -139,7 +141,7 @@ class TopicController extends Controller
 
         if ($topic->status !== 'generated') {
             return response()->json([
-                'error' => 'Topic must be in "generated" status to approve.'
+                'error' => 'Topic must be in "generated" status to approve.',
             ], 422);
         }
 
@@ -151,9 +153,9 @@ class TopicController extends Controller
             $topic->generated_image_url = $request->input('image_url');
         }
 
-        if (!$topic->generated_content) {
+        if (! $topic->generated_content) {
             return response()->json([
-                'error' => 'No generated content to publish.'
+                'error' => 'No generated content to publish.',
             ], 422);
         }
 
@@ -167,8 +169,9 @@ class TopicController extends Controller
 
         foreach ($fanpageIds as $fanpageId) {
             $fanpage = Fanpage::find($fanpageId);
-            if (!$fanpage) {
+            if (! $fanpage) {
                 $errors[] = "Fanpage ID {$fanpageId} not found.";
+
                 continue;
             }
 
@@ -179,7 +182,8 @@ class TopicController extends Controller
                 if ($pageToken === 'mock_page_token_123') {
                     Log::info("Mock Approve Publish: Page {$fbPageId}, Content=\"{$topic->generated_content}\", Image=\"{$topic->generated_image_url}\"");
                     $successPages[] = $fbPageId;
-                    $topic->fb_post_id = 'mock_post_' . time();
+                    $topic->fb_post_id = 'mock_post_'.time();
+
                     continue;
                 }
 
@@ -210,10 +214,10 @@ class TopicController extends Controller
                         ]);
                     }
                 } else {
-                    $errors[] = "Page {$fbPageId}: " . $response->body();
+                    $errors[] = "Page {$fbPageId}: ".$response->body();
                 }
             } catch (\Exception $e) {
-                $errors[] = "Page {$fanpageId}: " . $e->getMessage();
+                $errors[] = "Page {$fanpageId}: ".$e->getMessage();
             }
         }
 
@@ -273,18 +277,18 @@ class TopicController extends Controller
      */
     private function getPublicImageUrl(?string $url): ?string
     {
-        if (!$url) {
+        if (! $url) {
             return null;
         }
 
-        if (!str_contains($url, 'localhost') && !str_contains($url, '127.0.0.1') && !str_contains($url, 'host.docker.internal')) {
+        if (! str_contains($url, 'localhost') && ! str_contains($url, '127.0.0.1') && ! str_contains($url, 'host.docker.internal')) {
             return $url;
         }
 
         $parsed = parse_url($url);
         $path = $parsed['path'] ?? '';
-        $query = isset($parsed['query']) ? '?' . $parsed['query'] : '';
+        $query = isset($parsed['query']) ? '?'.$parsed['query'] : '';
 
-        return 'https://zeflyo-dev.loca.lt' . $path . $query;
+        return 'https://zeflyo-dev.loca.lt'.$path.$query;
     }
 }

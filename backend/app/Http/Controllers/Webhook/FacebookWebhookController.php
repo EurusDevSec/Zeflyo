@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Webhook;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
 use App\Jobs\ProcessFacebookWebhookJob;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class FacebookWebhookController extends Controller
@@ -23,6 +22,7 @@ class FacebookWebhookController extends Controller
 
         if ($mode === 'subscribe' && $token === $configuredToken) {
             Log::info('Facebook Webhook verified successfully.');
+
             return response($challenge, 200)->header('Content-Type', 'text/plain');
         }
 

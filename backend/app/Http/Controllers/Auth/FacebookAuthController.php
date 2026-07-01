@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
-use App\Models\User;
 use App\Models\Fanpage;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -28,7 +28,7 @@ class FacebookAuthController extends Controller
         }
 
         // 1. Exchange short-lived token for long-lived user access token
-        $tokenResponse = Http::get("https://graph.facebook.com/v20.0/oauth/access_token", [
+        $tokenResponse = Http::get('https://graph.facebook.com/v20.0/oauth/access_token', [
             'grant_type' => 'fb_exchange_token',
             'client_id' => $appId,
             'client_secret' => $appSecret,
@@ -37,24 +37,26 @@ class FacebookAuthController extends Controller
 
         if ($tokenResponse->failed()) {
             Log::error('Facebook Token Exchange Failed', ['response' => $tokenResponse->json()]);
+
             return response()->json(['error' => 'Failed to exchange Facebook token'], 400);
         }
 
         $longLivedUserToken = $tokenResponse->json()['access_token'];
 
         // 2. Fetch user profile from Facebook
-        $userResponse = Http::get("https://graph.facebook.com/v20.0/me", [
+        $userResponse = Http::get('https://graph.facebook.com/v20.0/me', [
             'fields' => 'id,name,email,picture.type(large)',
             'access_token' => $longLivedUserToken,
         ]);
 
         if ($userResponse->failed()) {
             Log::error('Facebook User Profile Fetch Failed', ['response' => $userResponse->json()]);
+
             return response()->json(['error' => 'Failed to fetch user profile'], 400);
         }
 
         $fbUser = $userResponse->json();
-        $email = $fbUser['email'] ?? ($fbUser['id'] . '@facebook.com');
+        $email = $fbUser['email'] ?? ($fbUser['id'].'@facebook.com');
         $avatar = $fbUser['picture']['data']['url'] ?? null;
 
         // Create or update user in database
@@ -67,7 +69,7 @@ class FacebookAuthController extends Controller
         );
 
         // 3. Fetch user's Facebook Pages
-        $pagesResponse = Http::get("https://graph.facebook.com/v20.0/me/accounts", [
+        $pagesResponse = Http::get('https://graph.facebook.com/v20.0/me/accounts', [
             'fields' => 'id,name,access_token,picture.type(large)',
             'access_token' => $longLivedUserToken,
         ]);
@@ -81,7 +83,7 @@ class FacebookAuthController extends Controller
                 // Save or update Fanpage
                 Fanpage::updateOrCreate(
                     [
-                        'fb_page_id' => $page['id']
+                        'fb_page_id' => $page['id'],
                     ],
                     [
                         'user_id' => $user->id,
@@ -140,11 +142,11 @@ class FacebookAuthController extends Controller
         if ($user->exists) {
             $user->checkAndAwardDailyFreeCredits();
             $checkinHistory = $user->checkins()
-                ->whereMonth('checkin_date', \Carbon\Carbon::now()->month)
-                ->whereYear('checkin_date', \Carbon\Carbon::now()->year)
+                ->whereMonth('checkin_date', Carbon::now()->month)
+                ->whereYear('checkin_date', Carbon::now()->year)
                 ->pluck('checkin_date')
-                ->map(function($date) {
-                    return $date instanceof \DateTimeInterface ? $date->format('Y-m-d') : \Carbon\Carbon::parse($date)->format('Y-m-d');
+                ->map(function ($date) {
+                    return $date instanceof \DateTimeInterface ? $date->format('Y-m-d') : Carbon::parse($date)->format('Y-m-d');
                 })
                 ->toArray();
         }
@@ -161,7 +163,7 @@ class FacebookAuthController extends Controller
             'subscription_expires_at' => $user->subscription_expires_at,
             'phone' => $user->phone,
             'referral_phone' => $user->referral_phone,
-            'last_checkin_at' => $user->last_checkin_at ? \Carbon\Carbon::parse($user->last_checkin_at)->toIso8601String() : null,
+            'last_checkin_at' => $user->last_checkin_at ? Carbon::parse($user->last_checkin_at)->toIso8601String() : null,
             'checkin_history' => $checkinHistory,
         ];
     }

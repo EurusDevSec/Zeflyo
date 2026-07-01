@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
+import Footer from "@/components/Footer";
 import { 
   ArrowLeft,
   Plus,
@@ -30,7 +31,7 @@ import {
 
 interface Fanpage {
   id: number;
-  user_id: number;
+  user_id: string | number;
   fb_page_id: string;
   name: string;
   avatar_url: string | null;
@@ -52,10 +53,10 @@ export default function AutoReplyRules() {
   const [apiBaseUrl, setApiBaseUrl] = useState<string>("http://localhost");
   const [fanpages, setFanpages] = useState<Fanpage[]>([]);
   const [rules, setRules] = useState<AutoReplyRule[]>([]);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
   
   interface UserProfile {
-    id: number;
+    id: string | number;
     name: string;
     email: string;
     avatar: string | null;
@@ -109,7 +110,7 @@ export default function AutoReplyRules() {
     const savedToken = localStorage.getItem("zeflyo_token");
     const savedApiBase = localStorage.getItem("zeflyo_api_base");
     const savedPages = localStorage.getItem("zeflyo_mock_pages");
-    const savedTheme = localStorage.getItem("zeflyo_theme") || "dark";
+    const savedTheme = localStorage.getItem("zeflyo_theme") || "light";
     const savedUser = localStorage.getItem("zeflyo_user");
     const savedLang = localStorage.getItem("zeflyo_lang");
 
@@ -134,6 +135,14 @@ export default function AutoReplyRules() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (theme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  }, [theme]);
 
   // Fetch data
   useEffect(() => {
@@ -400,7 +409,7 @@ export default function AutoReplyRules() {
   });
 
   return (
-    <div className="min-h-screen animated-gradient text-[#f4f4f5] flex relative overflow-hidden font-sans">
+    <div className="h-screen animated-gradient text-[#f4f4f5] flex relative overflow-hidden font-sans">
       {/* Background Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-950/10 blur-[120px] pointer-events-none animate-pulse-glow" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-900/10 blur-[120px] pointer-events-none animate-pulse-glow-delayed" />
@@ -416,7 +425,7 @@ export default function AutoReplyRules() {
       />
 
       {/* Main Content Workspace */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-y-auto relative z-10">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto relative z-10">
         
         {/* Mobile Header */}
         <header className="w-full bg-[#18181b]/50 border-b border-zinc-800 px-6 py-4 flex items-center justify-between lg:hidden">
@@ -448,7 +457,7 @@ export default function AutoReplyRules() {
         <div className="flex-1 p-6 lg:p-10 max-w-7xl w-full mx-auto flex flex-col gap-6">
           
           {/* Header title */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-850 pb-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-850 pb-5 lg:pr-[280px]">
             <div>
               <h1 className="text-xl sm:text-2xl font-extrabold tracking-wider text-zinc-150 uppercase flex items-center gap-2">
                 Auto-Reply Rules <Sparkles className="w-5 h-5 text-indigo-400" />
@@ -552,7 +561,7 @@ export default function AutoReplyRules() {
                     {/* Trigger Keyword Badges */}
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-[11px] font-semibold text-zinc-550 uppercase tracking-wide">Từ khóa:</span>
-                      <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-indigo-300 text-xs font-bold font-mono">
+                      <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-indigo-600 dark:text-indigo-300 text-xs font-bold font-mono">
                         {rule.keyword}
                       </span>
                     </div>
@@ -715,16 +724,7 @@ export default function AutoReplyRules() {
         </div>
 
         {/* Footer Branding */}
-        <footer className="w-full py-6 text-center text-xs text-zinc-650 border-t border-zinc-850 z-10 bg-[#09090b]/80 backdrop-blur-md mt-auto">
-          <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p>© {new Date().getFullYear()} Zeflyo Omnichannel Hub. All rights reserved.</p>
-            <div className="flex gap-4 items-center">
-              <span className="flex items-center gap-1.5"><HelpCircle className="w-3.5 h-3.5" /> Phase 1 Setup Verified</span>
-              <span>•</span>
-              <span className="flex items-center gap-1.5"><Sliders className="w-3.5 h-3.5" /> Multi-Tenant Architecture</span>
-            </div>
-          </div>
-        </footer>
+        <Footer />
 
       </div>
     </div>

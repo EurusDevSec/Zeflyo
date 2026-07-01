@@ -1,14 +1,14 @@
 # 🎯 PLAN.md — Zeflyo 2-Week Tốc Chiến Roadmap
-> *Last updated: 2026-06-15 | Duration: 14 Days (Local Dev -> Staging -> Production)*
+> *Last updated: 2026-06-26 | Duration: 14 Days (Local Dev -> Staging -> Production)*
 
 ---
 
 ## 👥 Team Roles & Risks Management
 
-- **Hoàng (PM & DevOps/Cloud)**: 100% DevOps pipeline, Docker-compose local, Ngrok tunnels, Terraform AWS setup, GitHub Actions CI/CD (lint, test, Trivy scan, deploy), and Git-gatekeeping.
-- **Khoa (Fullstack & Security Lead/Pentest/SOC)**: Core Live Chat Hub backend & Next.js frontend UI, Google Gemini API integrations, secure coding, OWASP API pentesting, and CloudWatch security audit logging.
-- **Tiến (Fullstack Developer)**: Standalone features: **Post Scheduler** (CRUD + console schedule publisher) and **Auto-reply configuration settings panel**.
-  - *Integration Strategy*: Feature code is isolated in separate folders/routes, kept independent from the core webhook and broadcasting pipelines. All PRs require double approval from PM (Hoàng) and Security Lead (Khoa).
+- **Tiến (Feature PM & Fullstack Developer)**: Quản lý kế hoạch tiến độ các feature, theo dõi backlog, nhắc nhở (reminder) tiến độ thành viên, phát triển standalone features.
+- **Hoàng (DevOps Lead & Technical Gatekeeper / Owner)**: Giám sát tối cao hệ thống, quản lý hạ tầng Cloud/DevOps (Terraform, CI/CD, Docker-compose), kiểm soát chất lượng kỹ thuật cuối cùng (chặn Git-gatekeeping, phê duyệt PR staging/main, điều chỉnh kế hoạch nếu không hợp lý).
+- **Khoa (Security Lead & Pentest/SOC)**: Phát triển Core Live Chat Hub backend & Next.js frontend UI, Google Gemini API integrations, secure coding, OWASP API pentesting, và CloudWatch security audit logging.
+  - *Integration Strategy*: Feature code is isolated in separate folders/routes, kept independent from the core webhook and broadcasting pipelines. All PRs require double approval từ Hoàng (DevOps/Arch) và Khoa (Security).
 
 ---
 
@@ -50,3 +50,22 @@
 - [ ] DevOps (Hoàng): Deploy Next.js to S3 + CloudFront CDN.
 - [ ] DevOps/Security (Hoàng + Khoa): Setup CloudWatch log groups, alerting metric filters, and Dashboard.
 - [ ] Team (Hoàng + Khoa + Tiến): Final QA, demo run, bug fixes, freeze code, and release project.
+
+### Phase 6: UI/UX Premium Overhaul & Sidebar Optimization (2026-06-26) - [Walkthrough](file:///C:/Users/ACER/.gemini/antigravity-ide/brain/0db0bc85-e913-4c3e-af7a-005ff44c8899/walkthrough.md)
+- [x] **Global CSS**: Xóa utility class hijacking, fix font tiếng Việt (`Plus Jakarta Sans`), design system light/dark mode premium.
+- [x] **Layout root**: Thêm blocking inline script trong `<head>` để inject theme class đồng bộ — fix hoàn toàn hiện tượng nháy đen khi reload.
+- [x] **Sidebar**: Refactor toàn bộ — replace `<a>` bằng Next.js `<Link>`/`router.push()`, collapsible submenus độc lập, sticky scroll đúng, light theme đồng bộ, auto-expand theo route.
+- [x] **Language sync**: Fix localStorage key mismatch `"lang"` → `"zeflyo_lang"` trong `autopost/page.tsx`.
+- [x] **Tab URL sync**: Thêm `useEffect` đọc `?tab=` query param khi mount cho scheduler & autopost.
+- [x] **Settings layout**: Truyền `theme`/`toggleTheme` props từ settings layout xuống Sidebar để đồng bộ theme.
+- [x] **Page UI overhaul**: Nâng cấp toàn bộ UI/UX cho `/scheduler`, `/autopost`, `/rules`, `/chat`, `/` (login).
+- [x] **Unified "Đăng & Tự Động Hóa" sidebar menu**: Gộp 2 mục "Lên lịch đăng bài" + "Đăng bài tự động AI" thành 1 hub với 4 section rõ ràng (Lên lịch / Tạo bài AI / Sản phẩm / Tự động hóa).
+- [x] **TypeScript**: `npx tsc --noEmit` → 0 errors. `npm run build` → all routes compiled successfully.
+
+### Phase 7: Tối ưu hóa Trải nghiệm AI & Tích hợp Công thức Marketing (AIDA/PAS/BAB) + Streaming Token-Saving - [Specs](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docs/phases/phase7_ai_optimization.md)
+- [ ] **Backend**: Nâng cấp `GeminiService` và triển khai API route `/api/posts/generate-ai-stream` hỗ trợ SSE streaming.
+- [ ] **Backend**: Thêm cơ chế ngắt kết nối stream bằng `connection_aborted()` khi client hủy yêu cầu để tiết kiệm token.
+- [ ] **Backend**: Xây dựng system prompts chuẩn hóa cho 3 công thức: AIDA, PAS, BAB theo hướng Value-First.
+- [ ] **Frontend**: Tái thiết kế UI tab "Tạo bài AI": thẻ chọn công thức trực quan, Prompt Chips, ẩn nâng cao.
+- [ ] **Frontend**: Kết nối SSE hiển thị chữ chạy (typing effect) thời gian thực và tích hợp `AbortController` cho nút "Hủy".
+- [ ] **Testing**: Kiểm định luồng stream kết nối, hủy kết nối, kiểm tra độ bám sát công thức marketing của bài viết.

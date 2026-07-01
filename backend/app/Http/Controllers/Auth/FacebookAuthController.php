@@ -97,7 +97,7 @@ class FacebookAuthController extends Controller
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([
-            'user' => $user,
+            'user' => $this->formatUser($user),
             'token' => $token,
             'message' => 'Login successful',
         ]);
@@ -106,7 +106,7 @@ class FacebookAuthController extends Controller
     public function demoLogin(Request $request)
     {
         $user = User::firstOrCreate(
-            ['email' => 'demo@zeflyo.io'],
+            ['email' => 'admin@zeflyo.io'],
             [
                 'name' => 'Demo User',
                 'avatar' => null,
@@ -128,9 +128,41 @@ class FacebookAuthController extends Controller
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([
-            'user' => $user,
+            'user' => $this->formatUser($user),
             'token' => $token,
             'message' => 'Demo Login successful',
         ]);
+    }
+
+    protected function formatUser($user)
+    {
+        $checkinHistory = [];
+        if ($user->exists) {
+            $user->checkAndAwardDailyFreeCredits();
+            $checkinHistory = $user->checkins()
+                ->whereMonth('checkin_date', \Carbon\Carbon::now()->month)
+                ->whereYear('checkin_date', \Carbon\Carbon::now()->year)
+                ->pluck('checkin_date')
+                ->map(function($date) {
+                    return $date instanceof \DateTimeInterface ? $date->format('Y-m-d') : \Carbon\Carbon::parse($date)->format('Y-m-d');
+                })
+                ->toArray();
+        }
+
+        return [
+            'id' => $user->uid ?? $user->id,
+            'name' => $user->name,
+            'display_name' => $user->display_name,
+            'email' => $user->email,
+            'avatar_url' => $user->avatar_url ?? $user->avatar,
+            'timezone' => $user->timezone,
+            'credits' => $user->credits,
+            'subscription_plan' => $user->subscription_plan,
+            'subscription_expires_at' => $user->subscription_expires_at,
+            'phone' => $user->phone,
+            'referral_phone' => $user->referral_phone,
+            'last_checkin_at' => $user->last_checkin_at ? \Carbon\Carbon::parse($user->last_checkin_at)->toIso8601String() : null,
+            'checkin_history' => $checkinHistory,
+        ];
     }
 }

@@ -12,12 +12,33 @@ use Illuminate\Notifications\Notifiable;
 
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'display_name', 'avatar_url', 'timezone', 'credits', 'subscription_plan', 'subscription_expires_at', 'phone', 'referral_phone', 'uid', 'last_checkin_at', 'last_free_credits_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+
+    protected static function booted()
+    {
+        static::creating(function ($user) {
+            if (empty($user->uid)) {
+                $user->uid = \Illuminate\Support\Str::random(28);
+            }
+        });
+    }
+
+    public function getUidAttribute($value)
+    {
+        if (empty($value)) {
+            $value = \Illuminate\Support\Str::random(28);
+            $this->attributes['uid'] = $value;
+            if ($this->exists) {
+                $this->save();
+            }
+        }
+        return $value;
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -29,7 +50,23 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_checkin_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Check if the user is on the Free plan and award them 100 free credits daily.
+     */
+    public function checkAndAwardDailyFreeCredits()
+    {
+        if ($this->subscription_plan === 'free') {
+            $today = \Carbon\Carbon::now($this->timezone ?? 'Asia/Ho_Chi_Minh')->toDateString();
+            if (empty($this->last_free_credits_at) || $this->last_free_credits_at < $today) {
+                $this->credits = ($this->credits ?? 0) + 100;
+                $this->last_free_credits_at = $today;
+                $this->save();
+            }
+        }
     }
 
     /**
@@ -56,5 +93,10 @@ class User extends Authenticatable
     public function products(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Product::class);
+    }
+
+    public function checkins(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(UserCheckin::class);
     }
 }

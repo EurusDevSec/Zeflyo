@@ -3,35 +3,37 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 class UploadController extends Controller
 {
+    /**
+     * Handle file upload.
+     */
     public function upload(Request $request)
     {
         $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max
+            'file' => 'nullable|file|image|max:5120',
+            'image' => 'nullable|file|image|max:5120',
         ]);
 
-        if ($request->file('image')) {
-            $file = $request->file('image');
-            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $file = $request->file('file') ?? $request->file('image');
+
+        if ($file && $file->isValid()) {
+            // Store the file in public disk, under 'uploads' directory
+            $path = $file->store('uploads', 'public');
             
-            $destinationPath = public_path('uploads');
-            if (!File::isDirectory($destinationPath)) {
-                File::makeDirectory($destinationPath, 0755, true, true);
-            }
-
-            $file->move($destinationPath, $filename);
-
-            $url = $request->getSchemeAndHttpHost() . '/uploads/' . $filename;
+            // Get public URL
+            $url = asset('storage/' . $path);
 
             return response()->json([
-                'message' => 'Upload successful',
                 'url' => $url,
+                'message' => 'Upload successful'
             ]);
         }
 
-        return response()->json(['error' => 'No file uploaded'], 400);
+        return response()->json([
+            'error' => 'No file uploaded or file is invalid'
+        ], 400);
     }
 }

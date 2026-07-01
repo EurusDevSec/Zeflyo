@@ -1,41 +1,70 @@
 # 💾 SESSION MEMORY — Zeflyo Project
-> Last Checkpoint: 2026-06-19 | Status: Phase 3 (Chat Hub Refactored), Phase 4 (Scheduler & Rules), Multilingual Support — 100% COMPLETE
+> Last Checkpoint: 2026-06-26 | Status: **FULL UI/UX PREMIUM OVERHAUL + SIDEBAR UNIFICATION — 100% COMPLETE & VERIFIED**
 
 ---
 
 ## ⚡ Active Task Completed (Những việc ĐÃ HOÀN THÀNH trong session)
-*   **[Phase 4] Automation - Scheduler & Auto-Reply Rules:**
-    *   Tạo thành công migration và model cho `ScheduledPost` và `AutoReplyRule` kèm theo các quan hệ và casts Eloquent.
-    *   Xây dựng đầy đủ các API CRUD bảo mật trong middleware `auth:sanctum` cho cả Scheduled Posts và Auto-Reply Rules.
-    *   Viết command `PublishScheduledPosts` (`php artisan posts:publish`) hỗ trợ tự động đăng trạng thái hoặc ảnh đính kèm lên Graph API của nhiều Fanpage song song.
-    *   Đăng ký cron job chạy command `posts:publish` mỗi phút trong `routes/console.php`.
-    *   Tích hợp bộ đối khớp từ khóa thông minh (keyword containment) trực tiếp vào webhook handler `ProcessFacebookWebhookJob` để phản hồi tức thì cho cả bình luận và tin nhắn Messenger, tự lưu tương tác và phát Echo socket cập nhật UI Live Chat.
-    *   Thiết kế giao diện soạn thảo Scheduler Next.js `/scheduler` dạng Split Pane có Facebook mockup preview thời gian thực và danh sách bài đăng lịch sử.
-    *   Thiết kế giao diện quản lý rules Next.js `/rules` sử dụng layout Cards tinh gọn, badges từ khóa màu sắc, nút Switch Toggle trạng thái hoạt động tức thì với micro-animations và modal CRUD.
-    *   Xác thực biên dịch build Next.js thành công 100% không phát sinh lỗi typescript, và viết feature test **[AutomationTest.php](file:///d:/ThucTapDN/Zeflyo/backend/tests/Feature/AutomationTest.php)** chạy thành công trên PHPUnit/Docker.
 
-*   **[Phase 3] Live Chat Hub Refactoring & WebSockets:**
-    *   Tái cấu trúc giao diện `chat/page.tsx` thành thiết kế Premium 3 cột Pancake Glassmorphism.
-    *   Tích hợp bộ xương tải trang (Skeleton Loaders) khi chuyển đổi và nạp cuộc hội thoại mới.
-    *   Tách biệt và tối ưu hiệu năng render bong bóng chat bằng `React.memo` (component `MessageBubble`).
-    *   Cải tiến ô nhập liệu sang dạng `<textarea>` hỗ trợ phím tắt gửi tin bằng `Enter` (không nhảy dòng) và `Shift + Enter` để xuống dòng.
-    *   Thiết kế nút gạt "AI Auto-Reply" cao cấp, hiển thị loader nhỏ xoay tròn ngay bên trong switch dot khi trạng thái đang đồng bộ với Backend.
-    *   Nâng cấp cơ chế Responsive: Tự động ẩn cột 3 ở màn hình di động, hiển thị cột 1 (sidebar) và cột 2 (khung chat) dưới dạng trượt slide kèm nút Back quay lại danh sách cuộc trò chuyện.
-    *   Bổ sung hiệu ứng viền trái nổi bật (`border-blue-600`) cho đoạn hội thoại đang chọn và chấm tròn thông báo tin nhắn chưa đọc nhấp nháy cam (`animate-pulse shadow-orange-500/20`).
-    *   Refine trạng thái kết nối WebSocket Indicator trên Header bằng hiệu ứng màu sắc và glow tương ứng.
+### 🎨 UI/UX Premium Overhaul — Toàn bộ Frontend
 
-*   **[Phase 1] Multilingual & UX Improvements:**
-    *   Tích hợp bộ chuyển đổi ngôn ngữ **Anh / Việt (Language Switcher)** ở góc tiêu đề của Trang chủ (`page.tsx`) giúp chuyển đổi toàn bộ nhãn từ tiếng Anh sang tiếng Việt cực kỳ mượt mà.
-    *   Đồng bộ lựa chọn ngôn ngữ xuống `localStorage` để giữ nguyên trạng thái khi người dùng tải lại trang.
-    *   Tắt các thông báo lỗi Hydration phiền toái bằng thuộc tính `suppressHydrationWarning` trên thẻ `<body>` trong `layout.tsx` (khắc phục việc các extensions tự ý thay đổi DOM trước khi hydrate).
+*   **Global Design System ([`globals.css`](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/app/globals.css)):**
+    *   Xóa bỏ class hijacking nguy hiểm (`.text-white`, `.text-zinc-100` bị override bằng `!important` làm hỏng button màu).
+    *   Đổi `--font-heading` sang `'Plus Jakarta Sans'` để hiển thị tiếng Việt có dấu đúng chuẩn (trước đó fallback ra Times New Roman xấu).
+    *   Thêm CSS override riêng cho light mode sidebar: background trắng, border nhạt, text slate — premium như Linear/Vercel.
+    *   Thêm logo text gradient indigo-purple đẹp trong light mode.
+
+*   **Theme Flash Fix ([`layout.tsx`](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/app/layout.tsx)):**
+    *   Thêm **blocking inline `<script>` trong `<head>`** đọc `localStorage.zeflyo_theme` và gán class `.light` đồng bộ ngay khi parse HTML, **loại bỏ hoàn toàn hiện tượng nháy đen** khi reload trang ở light mode.
+
+*   **Sidebar Major Refactor ([`Sidebar.tsx`](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/components/Sidebar.tsx)):**
+    *   Thay **toàn bộ `<a>` tag và `window.location.href`** bằng Next.js `<Link>` và `router.push()` — loại bỏ hoàn toàn hiện tượng nháy màu đen khi chuyển trang.
+    *   Tất cả submenu (Cài đặt, Đăng bài) **có thể collapse/expand độc lập** — trước đó bị cố định, không toggle được.
+    *   Sidebar **sticky scroll đúng chuẩn**: root container `h-screen overflow-hidden`, chỉ nội dung bên trong mới `overflow-y-auto`.
+    *   Theme light mode sidebar **đồng bộ toàn bộ** — trước đó sidebar vẫn đen dù đã chuyển sang light theme.
+    *   Auto-expand submenu khi navigate đến `/scheduler` hoặc `/autopost`.
+
+*   **Language Sync Fix ([`autopost/page.tsx`](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/app/autopost/page.tsx)):**
+    *   Sửa lỗi key `"lang"` → **`"zeflyo_lang"`** trong localStorage. Lý do: tất cả pages dùng `zeflyo_lang` nhưng autopost dùng key khác nên ngôn ngữ bị reset mỗi lần chuyển trang.
+
+*   **Tab URL Sync ([`scheduler/page.tsx`](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/app/scheduler/page.tsx) & [`autopost/page.tsx`](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/app/autopost/page.tsx)):**
+    *   Thêm `useEffect` đọc `?tab=...` query param khi mount để đồng bộ active tab với URL — cho phép sidebar navigate trực tiếp đến đúng sub-tab.
+
+*   **Settings Theme Sync ([`settings/layout.tsx`](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/app/settings/layout.tsx)):**
+    *   Truyền `theme` và `toggleTheme` props xuống `<Sidebar>` từ layout settings — trước đó sidebar trong settings page không nhận được theme state nên luôn tối.
+
+### 🗂️ Unified "Đăng & Tự Động Hóa" Menu — Sidebar Restructuring
+
+*   **Vấn đề**: Hai mục sidebar "Lên lịch đăng bài" (`/scheduler`) và "Đăng bài tự động AI" (`/autopost`) gây nhầm lẫn vì chức năng na ná nhau, thậm chí cùng tên sub-tab "Quản lý lịch đăng".
+*   **Giải pháp**: Gộp thành **1 menu duy nhất "Đăng & Tự Động Hóa"** với 4 section rõ ràng bên trong:
+    *   📅 **Lên lịch** → `/scheduler?tab=setup` / `/scheduler?tab=list`
+    *   🤖 **Tạo bài AI** → `/autopost?tab=setup` / `/autopost?tab=list`
+    *   📦 **Sản phẩm** → `/autopost?tab=automation` / `/autopost?tab=product_list`
+    *   ⚡ **Tự động hóa** → `/scheduler?tab=automation`
+*   **State**: Thay 2 state `isSchedulerOpen`/`isAutopostOpen` bằng 1 state `isPublishOpen`.
+*   **Type fix**: Mở rộng `activeTab` prop type để include `topic_setup`, `manage`, `product_setup` — fix 3 TypeScript errors.
+*   **Verified**: `npx tsc --noEmit` → **0 errors** ✅
+
+---
 
 ## 🧠 Semantic Context Essence (Tinh túy kiến thức & Quyết định thiết kế)
-*   *Fallback Mock Token:* Khi sử dụng `mock_page_token_123` làm access token cho các fanpage, backend sẽ bỏ qua việc gọi API Facebook thật để tránh lỗi xác thực token, thay vào đó giả lập thành công trong nhật ký log của container.
-*   *Instant State Toggle:* Để tăng trải nghiệm cao cấp, switch toggle trên giao diện `/rules` thực hiện cập nhật tức thời trên React state và gửi request ngầm cập nhật database, tự động revert state nếu request backend thất bại.
-*   *Textarea Keyboard Shortcuts:* Sử dụng `<textarea>` thay cho `<input type="text">` cho phép hỗ trợ đa dòng hoàn chỉnh và tối ưu trải nghiệm gõ phản hồi nhanh từ bàn phím.
-*   *Mobile Column Sliding:* Sử dụng state `mobileView` giúp chuyển đổi hiển thị trượt giữa các cột giúp giao diện gọn gàng trên thiết bị di động.
+
+*   **KHÔNG dùng `window.location.href`** trong Sidebar: Dùng Next.js `router.push()` và `<Link>`. Việc dùng anchor tag gốc gây full page reload → hiện tượng nháy đen → UX xấu.
+*   **Theme injection phải blocking**: Script gán theme class **phải nằm trong `<head>` và không có `async/defer`** để chạy trước khi browser render bất kỳ DOM nào. Nếu dùng `useEffect` (client-side) sẽ luôn bị nháy đen vì render trắng/tối trước rồi mới đổi.
+*   **localStorage keys chuẩn của dự án**:
+    *   `zeflyo_theme` → `"dark"` | `"light"` (default: `"light"`)
+    *   `zeflyo_lang` → `"vi"` | `"en"` (default: `"vi"`)
+    *   `zeflyo_user` → JSON object UserProfile
+    *   `zeflyo_token` → JWT token (nếu bắt đầu bằng `"mock_token"` → mock mode)
+    *   `zeflyo_read_notifications` → mảng ID thông báo đã đọc
+*   **Admin identity**: Email cứng `admin@zeflyo.io` được check ở cả frontend (`isAdmin`) và backend middleware.
+*   **Sidebar activeTab prop**: Sidebar nhận `activeTab` từ page để highlight đúng sub-tab. Khi navigate từ trang khác (không có `setActiveTab`), Sidebar dùng `router.push("/scheduler?tab=xxx")` để vừa chuyển trang vừa set tab qua URL.
+*   **Mock Mode**: Token bắt đầu bằng `mock_token_` → frontend chạy hoàn toàn với dữ liệu giả không cần backend. Credits tự cộng +100/ngày cho plan free.
+*   **Mô hình quản lý mới (PM transition)**: Tiến thử sức làm Feature PM & Coordinator (theo dõi tiến độ, backlog, reminder). Hoàng lùi về làm DevOps Lead & Technical Gatekeeper tối cao (quản lý hạ tầng AWS, CI/CD, có quyền phủ quyết/điều chỉnh kế hoạch nếu không hợp lý, duyệt PR staging/main cùng Khoa).
+
+---
 
 ## 🔜 Next Steps (3 hành động kỹ thuật trực tiếp kế tiếp)
-- [ ] **Step 1:** Thiết lập API Key Google Gemini 1.5 Flash trong file cấu hình `.env` và `config/services.php`.
-- [ ] **Step 2:** Viết lớp `GeminiService` để phân tích ngữ cảnh và trả lời tự động cho khách hàng khi không khớp từ khóa cố định nào.
-- [ ] **Step 3:** Tiến hành review bảo mật toàn diện (Security Review) và mã hóa các access token trong database.
+
+- [ ] **Step 1:** Đồng bộ hóa credits thực tế nhận được từ webhook SePay với hệ thống trừ điểm khi chạy AI Campaigns (backend: `POST /api/webhooks/sepay` → cộng credits vào `users.credits`).
+- [ ] **Step 2:** Tích hợp DB encryption cho các Facebook token fanpage (`pages.access_token`) bằng Laravel Eloquent Encrypted Casts — yêu cầu security của Khoa chưa làm.
+- [ ] **Step 3:** DevOps (Hoàng): Hoàn thiện Terraform scripts + GitHub Actions CI/CD cho Phase 5 (Pest test → Larastan → Trivy scan → ECR upload → ECS rolling deploy → S3+CloudFront Next.js deploy).

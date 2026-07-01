@@ -25,7 +25,7 @@
   --ring: #7c3aed;
   
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  --font-heading: 'Outfit', sans-serif;
+  --font-heading: 'Plus Jakarta Sans', 'Outfit', sans-serif;
   
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
@@ -190,7 +190,7 @@ h1, h2, h3, h4, h5, h6, .logo-text {
 }
 
 /* Premium Form Inputs Overhaul */
-input, select, textarea {
+input:not([type="checkbox"]):not([type="radio"]), select, textarea {
   background-color: var(--input) !important;
   border: 1px solid var(--border) !important;
   color: var(--foreground) !important;
@@ -201,13 +201,13 @@ input, select, textarea {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-input:focus, select:focus, textarea:focus {
+input:not([type="checkbox"]):not([type="radio"]):focus, select:focus, textarea:focus {
   border-color: rgba(124, 58, 237, 0.5) !important;
   box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.12), 0 0 12px rgba(124, 58, 237, 0.08) !important;
   background-color: rgba(10, 10, 15, 0.85) !important;
 }
 
-.light input:focus, .light select:focus, .light textarea:focus {
+.light input:not([type="checkbox"]):not([type="radio"]):focus, .light select:focus, .light textarea:focus {
   border-color: rgba(79, 70, 229, 0.5) !important;
   box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.12), 0 0 12px rgba(79, 70, 229, 0.08) !important;
   background-color: #ffffff !important;
@@ -309,13 +309,59 @@ option {
 }
 
 /* Sidebar structure visual fix */
+aside {
+  --background: #020204;
+  --foreground: #f4f4f5;
+  --card: rgba(10, 10, 15, 0.7);
+  --card-foreground: #f4f4f5;
+  --popover: #050508;
+  --popover-foreground: #f4f4f5;
+  --primary: #7c3aed;
+  --primary-hover: #8b5cf6;
+  --primary-foreground: #ffffff;
+  --secondary: #18181b;
+  --secondary-foreground: #fafafa;
+  --muted: #1e1e24;
+  --muted-foreground: #a1a1aa;
+  --accent: #0891b2;
+  --accent-foreground: #fafafa;
+  --destructive: #f43f5e;
+  --destructive-foreground: #fafafa;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(124, 58, 237, 0.25);
+  --input: rgba(5, 5, 10, 0.6);
+  --ring: #7c3aed;
+}
+
 aside.w-72 {
   background-color: #0b0a12 !important; /* Premium Obsidian Navy */
   border-right: 1px solid var(--border) !important;
 }
 
+.light aside {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --card: rgba(241, 245, 249, 0.5);
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #4f46e5;
+  --primary-hover: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
+  --accent: #06b6d4;
+  --border: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --input: #ffffff;
+  --ring: #4f46e5;
+}
+
 .light aside.w-72 {
   background-color: #ffffff !important;
+  border-right: 1px solid #e2e8f0 !important;
 }
 
 /* Points badge glow in sidebar */
@@ -336,9 +382,37 @@ aside.w-72 {
 .text-zinc-150,
 .text-zinc-200,
 .text-zinc-300,
-.text-zinc-350,
-.text-white {
+.text-zinc-350 {
   color: var(--foreground) !important;
+}
+
+/* Light mode text colors override to prevent contrast issues */
+.light .text-white {
+  color: var(--foreground) !important;
+}
+
+/* Ensure white text remains white inside colored containers, buttons, and links */
+.light button.text-white,
+.light a.text-white,
+.light button .text-white,
+.light a .text-white,
+.light button .text-zinc-100,
+.light a .text-zinc-100,
+.light button .text-zinc-200,
+.light a .text-zinc-200,
+.light .bg-blue-600,
+.light .bg-\[\#6C63FF\],
+.light .bg-gradient-to-r,
+.light .bg-emerald-600,
+.light .bg-green-500,
+.light .bg-red-500,
+.light .bg-blue-600 *,
+.light .bg-\[\#6C63FF\] *,
+.light .bg-gradient-to-r *,
+.light .bg-emerald-600 *,
+.light .bg-green-500 *,
+.light .bg-red-500 * {
+  color: #ffffff !important;
 }
 
 .text-zinc-400,
@@ -505,6 +579,8 @@ button:focus-visible, a:focus-visible {
   color: #64748b !important; /* Slate-500 */
 }
 
+
+
 /* Light mode glowing background elements adjustment (removes dirty blobs) */
 .light .animate-pulse-glow {
   background-color: rgba(99, 102, 241, 0.06) !important; /* Soft light indigo */
@@ -516,4 +592,78 @@ button:focus-visible, a:focus-visible {
 /* Premium Typography refinements */
 h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.02em;
+}
+
+/* Light mode Sidebar specific overrides */
+.light aside a:not(.bg-zinc-900),
+.light aside div[onClick]:not(.bg-zinc-900),
+.light aside button:not(.bg-zinc-900):not(.bg-gradient-to-r) {
+  color: #475569 !important; /* slate-600 */
+}
+
+.light aside a:not(.bg-zinc-900):hover,
+.light aside div[onClick]:not(.bg-zinc-900):hover,
+.light aside button:not(.bg-zinc-900):not(.bg-gradient-to-r):hover {
+  color: #0f172a !important; /* slate-900 */
+  background-color: rgba(79, 70, 229, 0.06) !important; /* soft active/hover purple */
+}
+
+.light aside button[title="Notifications"],
+.light aside button[title="Toggle theme"] {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light aside button[title="Notifications"]:hover,
+.light aside button[title="Toggle theme"]:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.light aside .px-6 .bg-zinc-900\/30 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light aside .bg-zinc-900\/60 {
+  background-color: #e2e8f0 !important;
+  color: #64748b !important;
+  border-color: #cbd5e1 !important;
+}
+
+.light aside .bg-zinc-950\/40 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Light mode Sidebar specific footer & text refinements */
+.light aside div.bg-\[\#08080c\] {
+  background-color: #ffffff !important;
+}
+
+.light aside,
+.light aside * {
+  border-color: #e2e8f0 !important;
+}
+
+.light aside span:not(.text-white):not(.text-emerald-400),
+.light aside .text-zinc-200,
+.light aside .text-zinc-300,
+.light aside .text-zinc-350,
+.light aside .text-zinc-400,
+.light aside .text-zinc-450,
+.light aside .text-zinc-500 {
+  color: #475569 !important;
+}
+
+.light aside .text-zinc-200.font-bold {
+  color: #0f172a !important;
+}
+
+.light .logo-text {
+  background-image: linear-gradient(to right, #4f46e5, #7c3aed, #4f46e5) !important;
+  color: transparent !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
 }

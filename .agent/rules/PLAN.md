@@ -63,9 +63,9 @@
 - [x] **TypeScript**: `npx tsc --noEmit` → 0 errors. `npm run build` → all routes compiled successfully.
 
 ### Phase 7: Tối ưu hóa Trải nghiệm AI & Tích hợp Công thức Marketing (AIDA/PAS/BAB) + Streaming Token-Saving - [Specs](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docs/phases/phase7_ai_optimization.md)
-- [ ] **Backend**: Nâng cấp `GeminiService` và triển khai API route `/api/posts/generate-ai-stream` hỗ trợ SSE streaming.
-- [ ] **Backend**: Thêm cơ chế ngắt kết nối stream bằng `connection_aborted()` khi client hủy yêu cầu để tiết kiệm token.
-- [ ] **Backend**: Xây dựng system prompts chuẩn hóa cho 3 công thức: AIDA, PAS, BAB theo hướng Value-First.
+- [x] **Backend**: Nâng cấp `GeminiService` và triển khai API route `/api/posts/generate-ai-stream` hỗ trợ SSE streaming.
+- [x] **Backend**: Thêm cơ chế ngắt kết nối stream bằng `connection_aborted()` khi client hủy yêu cầu để tiết kiệm token.
+- [x] **Backend**: Xây dựng system prompts chuẩn hóa cho 3 công thức: AIDA, PAS, BAB theo hướng Value-First.
 - [ ] **Frontend**: Tái thiết kế UI tab "Tạo bài AI": thẻ chọn công thức trực quan, Prompt Chips, ẩn nâng cao.
 - [ ] **Frontend**: Kết nối SSE hiển thị chữ chạy (typing effect) thời gian thực và tích hợp `AbortController` cho nút "Hủy".
-- [ ] **Testing**: Kiểm định luồng stream kết nối, hủy kết nối, kiểm tra độ bám sát công thức marketing của bài viết.
+- [x] **Testing**: Kiểm định luồng stream kết nối, hủy kết nối, kiểm tra độ bám sát công thức marketing của bài viết.

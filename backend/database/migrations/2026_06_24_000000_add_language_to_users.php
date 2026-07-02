@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'language')) {
+            if (! Schema::hasColumn('users', 'language')) {
                 $table->string('language', 5)->default('vi')->after('remember_token');
             }
         });

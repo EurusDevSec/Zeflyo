@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\PendingPayment;
+use App\Models\SystemNotification;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
@@ -43,7 +45,7 @@ class SettingsTest extends TestCase
             ->putJson('/api/user/profile', [
                 'display_name' => 'Updated Name',
                 'timezone' => 'Europe/London',
-                'avatar_url' => 'https://example.com/avatar.png'
+                'avatar_url' => 'https://example.com/avatar.png',
             ]);
 
         $response->assertStatus(200);
@@ -51,7 +53,7 @@ class SettingsTest extends TestCase
             'id' => $user->id,
             'display_name' => 'Updated Name',
             'timezone' => 'Europe/London',
-            'avatar_url' => 'https://example.com/avatar.png'
+            'avatar_url' => 'https://example.com/avatar.png',
         ]);
     }
 
@@ -93,7 +95,7 @@ class SettingsTest extends TestCase
 
         $response = $this->actingAs($user)
             ->postJson('/api/upload', [
-                'file' => $file
+                'file' => $file,
             ]);
 
         $response->assertStatus(200)
@@ -125,7 +127,7 @@ class SettingsTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'plan' => 'free',
-                'expires_at' => null
+                'expires_at' => null,
             ]);
     }
 
@@ -137,43 +139,43 @@ class SettingsTest extends TestCase
             ->postJson('/api/payments/create', [
                 'plan_id' => 'basic',
                 'cycle' => 'monthly',
-                'amount' => 79000
+                'amount' => 79000,
             ]);
 
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'success',
                 'payment' => [
-                    'id', 'user_id', 'code', 'plan_id', 'cycle', 'amount', 'status'
+                    'id', 'user_id', 'code', 'plan_id', 'cycle', 'amount', 'status',
                 ],
                 'bank' => [
-                    'name', 'code', 'account_number', 'account_name'
-                ]
+                    'name', 'code', 'account_number', 'account_name',
+                ],
             ]);
 
         $this->assertDatabaseHas('pending_payments', [
             'user_id' => $user->id,
             'plan_id' => 'basic',
             'amount' => 79000,
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
     }
 
     public function test_can_handle_sepay_webhook_for_plan(): void
     {
         $user = User::factory()->create(['credits' => 50]);
-        $payment = \App\Models\PendingPayment::create([
+        $payment = PendingPayment::create([
             'user_id' => $user->id,
             'code' => 'ZFTESTCODE1',
             'plan_id' => 'basic',
             'cycle' => 'monthly',
             'amount' => 79000,
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
 
         $response = $this->postJson('/api/webhook/sepay', [
             'code' => 'ZFTESTCODE1',
-            'amount' => 79000
+            'amount' => 79000,
         ]);
 
         $response->assertStatus(200)
@@ -181,7 +183,7 @@ class SettingsTest extends TestCase
 
         $this->assertDatabaseHas('pending_payments', [
             'code' => 'ZFTESTCODE1',
-            'status' => 'completed'
+            'status' => 'completed',
         ]);
 
         $user->refresh();
@@ -194,13 +196,13 @@ class SettingsTest extends TestCase
     {
         $user = User::factory()->create([
             'subscription_plan' => 'pro',
-            'subscription_expires_at' => now()->addMonth()
+            'subscription_expires_at' => now()->addMonth(),
         ]);
 
         $response = $this->actingAs($user)
             ->postJson('/api/user/subscription/cancel', [
                 'reasons' => ['Giá quá cao', 'Khó sử dụng'],
-                'feedback' => 'Test feedback'
+                'feedback' => 'Test feedback',
             ]);
 
         $response->assertStatus(200)
@@ -209,8 +211,8 @@ class SettingsTest extends TestCase
                 'message' => 'Subscription cancelled successfully',
                 'subscription' => [
                     'plan' => 'free',
-                    'expires_at' => null
-                ]
+                    'expires_at' => null,
+                ],
             ]);
 
         $user->refresh();
@@ -227,7 +229,7 @@ class SettingsTest extends TestCase
             'plan_id' => 'pro',
             'cycle' => 'monthly',
             'amount' => 179000,
-            'status' => 'completed'
+            'status' => 'completed',
         ]);
 
         $response = $this->actingAs($user)
@@ -235,12 +237,12 @@ class SettingsTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJson([
-                'success' => true
+                'success' => true,
             ])
             ->assertJsonFragment([
                 'code' => 'ZFTESTPAYMENT1',
                 'amount' => 179000,
-                'status' => 'completed'
+                'status' => 'completed',
             ]);
     }
 
@@ -253,22 +255,22 @@ class SettingsTest extends TestCase
             'plan_id' => 'pro',
             'cycle' => 'monthly',
             'amount' => 179000,
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
-        
+
         // Manipulate created_at time to be 16 minutes in the past
         $payment->created_at = now()->subMinutes(16);
         $payment->save();
 
         $response = $this->postJson('/api/webhook/sepay', [
             'code' => 'ZFEXPIRED1',
-            'amount' => 179000
+            'amount' => 179000,
         ]);
 
         $response->assertStatus(400)
             ->assertJson([
                 'success' => false,
-                'message' => 'Payment has expired and is automatically cancelled'
+                'message' => 'Payment has expired and is automatically cancelled',
             ]);
 
         $payment->refresh();
@@ -284,9 +286,9 @@ class SettingsTest extends TestCase
             'plan_id' => 'basic',
             'cycle' => 'monthly',
             'amount' => 79000,
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
-        
+
         // Manipulate created_at time to be 16 minutes in the past
         $payment->created_at = now()->subMinutes(16);
         $payment->save();
@@ -295,10 +297,10 @@ class SettingsTest extends TestCase
             ->getJson('/api/user/payments');
 
         $response->assertStatus(200);
-        
+
         $this->assertDatabaseHas('pending_payments', [
             'code' => 'ZFEXPIRED2',
-            'status' => 'failed'
+            'status' => 'failed',
         ]);
     }
 
@@ -311,7 +313,7 @@ class SettingsTest extends TestCase
             'plan_id' => 'pro',
             'cycle' => 'monthly',
             'amount' => 179000,
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
 
         $response = $this->actingAs($user)
@@ -320,12 +322,12 @@ class SettingsTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'message' => 'Payment cancelled successfully'
+                'message' => 'Payment cancelled successfully',
             ]);
 
         $this->assertDatabaseHas('pending_payments', [
             'id' => $payment->id,
-            'status' => 'cancelled'
+            'status' => 'cancelled',
         ]);
     }
 
@@ -348,13 +350,13 @@ class SettingsTest extends TestCase
         $this->assertNotNull($user->last_checkin_at);
 
         $timezone = $user->timezone ?? 'Asia/Ho_Chi_Minh';
-        $todayString = \Carbon\Carbon::now($timezone)->format('Y-m-d');
+        $todayString = Carbon::now($timezone)->format('Y-m-d');
 
         $this->assertDatabaseHas('user_checkins', [
             'user_id' => $user->id,
             'checkin_date' => $todayString,
         ]);
-        
+
         $this->assertContains($todayString, $response->json('user.checkin_history'));
     }
 
@@ -367,7 +369,7 @@ class SettingsTest extends TestCase
         ]);
 
         $timezone = $user->timezone ?? 'Asia/Ho_Chi_Minh';
-        $todayString = \Carbon\Carbon::now($timezone)->format('Y-m-d');
+        $todayString = Carbon::now($timezone)->format('Y-m-d');
 
         $user->checkins()->create([
             'checkin_date' => $todayString,
@@ -386,7 +388,7 @@ class SettingsTest extends TestCase
     public function test_user_can_fetch_notifications(): void
     {
         $user = User::factory()->create();
-        \App\Models\SystemNotification::create([
+        SystemNotification::create([
             'category' => 'feature',
             'title_vi' => 'Thông báo kiểm tra',
             'title_en' => 'Test Notification',
@@ -452,7 +454,7 @@ class SettingsTest extends TestCase
     public function test_admin_can_delete_notification(): void
     {
         $admin = User::factory()->create(['email' => 'admin@zeflyo.io']);
-        $notif = \App\Models\SystemNotification::create([
+        $notif = SystemNotification::create([
             'category' => 'info',
             'title_vi' => 'Xoá tôi đi',
             'title_en' => 'Delete me',
@@ -541,13 +543,13 @@ class SettingsTest extends TestCase
 
         $response = $this->actingAs($user)
             ->putJson('/api/user/language', [
-                'language' => 'en'
+                'language' => 'en',
             ]);
 
         $response->assertStatus(200)
             ->assertJson([
                 'message' => 'Language updated',
-                'language' => 'en'
+                'language' => 'en',
             ]);
 
         $this->assertEquals('en', $user->fresh()->language);
@@ -559,7 +561,7 @@ class SettingsTest extends TestCase
 
         $response = $this->actingAs($user)
             ->putJson('/api/user/language', [
-                'language' => 'ru'
+                'language' => 'ru',
             ]);
 
         $response->assertStatus(422)
@@ -575,12 +577,12 @@ class SettingsTest extends TestCase
                 'type' => 'bug',
                 'title' => 'Test bug',
                 'content' => 'Test content details',
-                'contact_email' => 'contact@test.com'
+                'contact_email' => 'contact@test.com',
             ]);
 
         $response->assertStatus(201)
             ->assertJson([
-                'message' => 'Feedback submitted successfully'
+                'message' => 'Feedback submitted successfully',
             ]);
 
         $this->assertDatabaseHas('feedbacks', [
@@ -588,7 +590,7 @@ class SettingsTest extends TestCase
             'type' => 'bug',
             'title' => 'Test bug',
             'content' => 'Test content details',
-            'contact_email' => 'contact@test.com'
+            'contact_email' => 'contact@test.com',
         ]);
     }
 
@@ -600,7 +602,7 @@ class SettingsTest extends TestCase
             ->postJson('/api/feedback', [
                 'type' => 'invalid_type',
                 'title' => '',
-                'content' => ''
+                'content' => '',
             ]);
 
         $response->assertStatus(422)
@@ -615,8 +617,8 @@ class SettingsTest extends TestCase
             $response = $this->actingAs($user)
                 ->postJson('/api/feedback', [
                     'type' => 'other',
-                    'title' => 'Feedback #' . $i,
-                    'content' => 'Some feedback text'
+                    'title' => 'Feedback #'.$i,
+                    'content' => 'Some feedback text',
                 ]);
             $response->assertStatus(201);
         }
@@ -625,10 +627,9 @@ class SettingsTest extends TestCase
             ->postJson('/api/feedback', [
                 'type' => 'other',
                 'title' => 'Too many requests',
-                'content' => 'Rate limit exceeded'
+                'content' => 'Rate limit exceeded',
             ]);
 
         $response->assertStatus(429);
     }
 }
-

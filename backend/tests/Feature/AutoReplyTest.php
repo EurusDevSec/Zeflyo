@@ -6,7 +6,6 @@ use App\Jobs\ProcessFacebookWebhookJob;
 use App\Models\AutoReplyRule;
 use App\Models\Customer;
 use App\Models\Fanpage;
-use App\Models\Interaction;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -15,6 +14,7 @@ use Tests\TestCase;
 class AutoReplyTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_keyword_rule_triggers_static_reply(): void
     {
         Http::fake();

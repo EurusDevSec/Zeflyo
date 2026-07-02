@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Events\MessageSent;
 use App\Models\Customer;
 use App\Models\Interaction;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -16,7 +17,7 @@ class ChatController extends Controller
     public function index(Request $request)
     {
         $fanpageIds = $request->user()->fanpages()->pluck('id');
-        
+
         if ($request->has('fanpage_id')) {
             $fanpageIds = [$request->input('fanpage_id')];
         }
@@ -37,6 +38,7 @@ class ChatController extends Controller
 
         $response = $customers->map(function ($customer) {
             $lastInteraction = $customer->interactions()->latest()->first();
+
             return [
                 'customer_id' => $customer->id,
                 'customer_name' => $customer->name ?? 'Facebook User',
@@ -49,7 +51,7 @@ class ChatController extends Controller
                     'content' => $lastInteraction->content,
                     'created_at' => $lastInteraction->created_at->toIso8601String(),
                     'is_from_customer' => $lastInteraction->is_from_customer,
-                ] : null
+                ] : null,
             ];
         });
 
@@ -64,7 +66,7 @@ class ChatController extends Controller
         $customer = Customer::findOrFail($customerId);
 
         // Verify the user owns the page this customer belongs to
-        if (!$request->user()->fanpages()->where('id', $customer->fanpage_id)->exists()) {
+        if (! $request->user()->fanpages()->where('id', $customer->fanpage_id)->exists()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -88,12 +90,12 @@ class ChatController extends Controller
         $fanpage = $customer->fanpage;
 
         // Verify the user owns this fanpage
-        if (!$request->user()->fanpages()->where('id', $fanpage->id)->exists()) {
+        if (! $request->user()->fanpages()->where('id', $fanpage->id)->exists()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
         // Generate a unique FB message ID for tracking
-        $fbMessageId = 'outbound.' . uniqid() . '.' . time();
+        $fbMessageId = 'outbound.'.uniqid().'.'.time();
 
         // 1. Save the interaction in database
         $interaction = Interaction::create([
@@ -109,12 +111,12 @@ class ChatController extends Controller
         $success = $this->sendFacebookMessage($customer->fb_customer_id, $interaction->content, $fanpage);
 
         // 3. Broadcast the event to other connected clients
-        broadcast(new \App\Events\MessageSent($interaction, $customer))->toOthers();
+        broadcast(new MessageSent($interaction, $customer))->toOthers();
 
         return response()->json([
             'status' => 'success',
             'interaction' => $interaction,
-            'fb_sent' => $success
+            'fb_sent' => $success,
         ]);
     }
 
@@ -130,24 +132,28 @@ class ChatController extends Controller
             // mock_page_token_123 is used for test purpose only
             if ($pageToken === 'mock_page_token_123') {
                 Log::info("Mock Facebook Message Sent: To={$recipientPsid}, Msg=\"{$text}\"");
+
                 return true;
             }
 
-            $response = Http::post("https://graph.facebook.com/v20.0/me/messages", [
+            $response = Http::post('https://graph.facebook.com/v20.0/me/messages', [
                 'recipient' => ['id' => $recipientPsid],
                 'message' => ['text' => $text],
-                'access_token' => $pageToken
+                'access_token' => $pageToken,
             ]);
 
             if ($response->successful()) {
                 Log::info("Facebook Message Sent successfully to PSID: {$recipientPsid}");
+
                 return true;
             }
 
-            Log::error("Facebook Send Message API failed: " . $response->body());
+            Log::error('Facebook Send Message API failed: '.$response->body());
+
             return false;
         } catch (\Exception $e) {
-            Log::error("Exception in Facebook Send Message API: " . $e->getMessage());
+            Log::error('Exception in Facebook Send Message API: '.$e->getMessage());
+
             return false;
         }
     }
@@ -160,16 +166,16 @@ class ChatController extends Controller
         $customer = Customer::findOrFail($customerId);
 
         // Verify the user owns the page this customer belongs to
-        if (!$request->user()->fanpages()->where('id', $customer->fanpage_id)->exists()) {
+        if (! $request->user()->fanpages()->where('id', $customer->fanpage_id)->exists()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $customer->ai_active = !$customer->ai_active;
+        $customer->ai_active = ! $customer->ai_active;
         $customer->save();
 
         return response()->json([
             'status' => 'success',
-            'ai_active' => $customer->ai_active
+            'ai_active' => $customer->ai_active,
         ]);
     }
 }

@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\AutoReplyRule;
 use App\Models\Fanpage;
+use Illuminate\Http\Request;
 
 class AutoReplyRuleController extends Controller
 {
@@ -21,7 +21,7 @@ class AutoReplyRuleController extends Controller
             ->get();
 
         return response()->json([
-            'rules' => $rules
+            'rules' => $rules,
         ]);
     }
 
@@ -38,9 +38,9 @@ class AutoReplyRuleController extends Controller
         ]);
 
         // Ensure user owns the target fanpage
-        if (!$request->user()->fanpages()->where('id', $request->input('fanpage_id'))->exists()) {
+        if (! $request->user()->fanpages()->where('id', $request->input('fanpage_id'))->exists()) {
             return response()->json([
-                'error' => 'Unauthorized access to this fanpage'
+                'error' => 'Unauthorized access to this fanpage',
             ], 403);
         }
 
@@ -53,7 +53,7 @@ class AutoReplyRuleController extends Controller
 
         return response()->json([
             'message' => 'Auto-reply rule created successfully',
-            'rule' => $rule->load('fanpage')
+            'rule' => $rule->load('fanpage'),
         ], 201);
     }
 
@@ -65,9 +65,9 @@ class AutoReplyRuleController extends Controller
         $rule = AutoReplyRule::findOrFail($id);
 
         // Ensure user owns the fanpage of this rule
-        if (!$request->user()->fanpages()->where('id', $rule->fanpage_id)->exists()) {
+        if (! $request->user()->fanpages()->where('id', $rule->fanpage_id)->exists()) {
             return response()->json([
-                'error' => 'Unauthorized access to this rule'
+                'error' => 'Unauthorized access to this rule',
             ], 403);
         }
 
@@ -80,9 +80,9 @@ class AutoReplyRuleController extends Controller
 
         // If changing fanpage_id, ensure user owns the new page
         if ($request->has('fanpage_id')) {
-            if (!$request->user()->fanpages()->where('id', $request->input('fanpage_id'))->exists()) {
+            if (! $request->user()->fanpages()->where('id', $request->input('fanpage_id'))->exists()) {
                 return response()->json([
-                    'error' => 'Unauthorized access to the new fanpage'
+                    'error' => 'Unauthorized access to the new fanpage',
                 ], 403);
             }
         }
@@ -91,7 +91,7 @@ class AutoReplyRuleController extends Controller
 
         return response()->json([
             'message' => 'Auto-reply rule updated successfully',
-            'rule' => $rule->load('fanpage')
+            'rule' => $rule->load('fanpage'),
         ]);
     }
 
@@ -103,16 +103,16 @@ class AutoReplyRuleController extends Controller
         $rule = AutoReplyRule::findOrFail($id);
 
         // Ensure user owns the fanpage of this rule
-        if (!$request->user()->fanpages()->where('id', $rule->fanpage_id)->exists()) {
+        if (! $request->user()->fanpages()->where('id', $rule->fanpage_id)->exists()) {
             return response()->json([
-                'error' => 'Unauthorized access to this rule'
+                'error' => 'Unauthorized access to this rule',
             ], 403);
         }
 
         $rule->delete();
 
         return response()->json([
-            'message' => 'Auto-reply rule deleted successfully'
+            'message' => 'Auto-reply rule deleted successfully',
         ]);
     }
 }

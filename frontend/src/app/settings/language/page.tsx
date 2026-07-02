@@ -29,10 +29,29 @@ export default function LanguagePage() {
     };
   }, []);
 
-  const handleSelectLanguage = (code: "vi" | "en") => {
+  const handleSelectLanguage = async (code: "vi" | "en") => {
     localStorage.setItem("zeflyo_lang", code);
     setLang(code);
     window.dispatchEvent(new Event("zeflyo_lang_changed"));
+
+    const token = localStorage.getItem("zeflyo_token");
+    const apiBaseUrl = localStorage.getItem("zeflyo_api_base") || "http://localhost";
+    
+    if (token) {
+      try {
+        await fetch(`${apiBaseUrl}/api/user/language`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ language: code }),
+        });
+      } catch (error) {
+        console.error("Failed to update language on backend", error);
+      }
+    }
   };
 
   const languages: LanguageOption[] = [

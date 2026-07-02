@@ -36,9 +36,9 @@ return [
     ],
 
     'facebook' => [
-        'client_id'            => env('FACEBOOK_CLIENT_ID'),
-        'client_secret'        => env('FACEBOOK_CLIENT_SECRET'),
-        'redirect'             => env('FACEBOOK_REDIRECT_URI'),
+        'client_id' => env('FACEBOOK_CLIENT_ID'),
+        'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
+        'redirect' => env('FACEBOOK_REDIRECT_URI'),
         'webhook_verify_token' => env('FACEBOOK_WEBHOOK_VERIFY_TOKEN'),
     ],
 
@@ -46,6 +46,5 @@ return [
         'key' => env('GEMINI_API_KEY'),
         'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
     ],
-
 
 ];

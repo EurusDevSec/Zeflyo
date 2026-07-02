@@ -30,7 +30,7 @@ class GeminiServiceTest extends TestCase
 
         config(['services.gemini.key' => 'test_key']);
 
-        $service = new GeminiService();
+        $service = new GeminiService;
         $reply = $service->generateReply('Tôi cần hỗ trợ mua áo', 'Bạn là trợ lý AI của cửa hàng thời trang.');
 
         $this->assertSame('Xin chào, đây là trả lời tự động.', $reply);
@@ -44,7 +44,7 @@ class GeminiServiceTest extends TestCase
 
         config(['services.gemini.key' => 'invalid_key']);
 
-        $service = new GeminiService();
+        $service = new GeminiService;
         $reply = $service->generateReply('Xin chào', 'Prompt');
 
         $this->assertNull($reply);
@@ -56,7 +56,7 @@ class GeminiServiceTest extends TestCase
 
         Log::shouldReceive('warning')->once();
 
-        $service = new GeminiService();
+        $service = new GeminiService;
         $reply = $service->generateReply('Hello', 'Prompt');
 
         $this->assertNull($reply);

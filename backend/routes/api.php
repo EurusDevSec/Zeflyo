@@ -50,6 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/posts/schedule', [\App\Http\Controllers\PostSchedulerController::class, 'store']);
     Route::delete('/posts/schedule/{id}', [\App\Http\Controllers\PostSchedulerController::class, 'destroy']);
     Route::post('/posts/generate-ai', [\App\Http\Controllers\PostSchedulerController::class, 'generateAi']);
+    Route::post('/posts/generate-ai-stream', [\App\Http\Controllers\PostSchedulerController::class, 'generateAiStream'])->middleware('throttle:ai_generator');
 
     // Auto-Reply Rules APIs
     Route::apiResource('/auto-reply-rules', \App\Http\Controllers\AutoReplyRuleController::class);
@@ -76,6 +77,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/products/{id}', [\App\Http\Controllers\ProductController::class, 'update']);
     Route::delete('/products/{id}', [\App\Http\Controllers\ProductController::class, 'destroy']);
     Route::post('/products/reorder', [\App\Http\Controllers\ProductController::class, 'reorder']);
+
+    // User settings and feedback APIs
+    Route::put('/user/language', [\App\Http\Controllers\UserSettingsController::class, 'updateLanguage']);
+    Route::post('/feedback', [\App\Http\Controllers\FeedbackController::class, 'store'])->middleware('throttle:5,1');
 
     // General Upload API
     Route::post('/upload', [\App\Http\Controllers\UploadController::class, 'upload']);

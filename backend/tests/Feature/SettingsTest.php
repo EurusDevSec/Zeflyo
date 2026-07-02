@@ -534,5 +534,101 @@ class SettingsTest extends TestCase
         $this->assertEquals(100, $user->credits);
         $this->assertEquals(now('Asia/Ho_Chi_Minh')->toDateString(), $user->last_free_credits_at);
     }
+
+    public function test_can_update_user_language(): void
+    {
+        $user = User::factory()->create(['language' => 'vi']);
+
+        $response = $this->actingAs($user)
+            ->putJson('/api/user/language', [
+                'language' => 'en'
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'message' => 'Language updated',
+                'language' => 'en'
+            ]);
+
+        $this->assertEquals('en', $user->fresh()->language);
+    }
+
+    public function test_update_user_language_validation_error(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->putJson('/api/user/language', [
+                'language' => 'ru'
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['language']);
+    }
+
+    public function test_can_submit_feedback(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->postJson('/api/feedback', [
+                'type' => 'bug',
+                'title' => 'Test bug',
+                'content' => 'Test content details',
+                'contact_email' => 'contact@test.com'
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'message' => 'Feedback submitted successfully'
+            ]);
+
+        $this->assertDatabaseHas('feedbacks', [
+            'user_id' => $user->id,
+            'type' => 'bug',
+            'title' => 'Test bug',
+            'content' => 'Test content details',
+            'contact_email' => 'contact@test.com'
+        ]);
+    }
+
+    public function test_submit_feedback_validation_error(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->postJson('/api/feedback', [
+                'type' => 'invalid_type',
+                'title' => '',
+                'content' => ''
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['type', 'title', 'content']);
+    }
+
+    public function test_feedback_route_rate_limiting(): void
+    {
+        $user = User::factory()->create();
+
+        for ($i = 0; $i < 5; $i++) {
+            $response = $this->actingAs($user)
+                ->postJson('/api/feedback', [
+                    'type' => 'other',
+                    'title' => 'Feedback #' . $i,
+                    'content' => 'Some feedback text'
+                ]);
+            $response->assertStatus(201);
+        }
+
+        $response = $this->actingAs($user)
+            ->postJson('/api/feedback', [
+                'type' => 'other',
+                'title' => 'Too many requests',
+                'content' => 'Rate limit exceeded'
+            ]);
+
+        $response->assertStatus(429);
+    }
 }
 

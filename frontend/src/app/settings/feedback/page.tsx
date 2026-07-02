@@ -51,7 +51,7 @@ export default function FeedbackPage() {
     };
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!subject.trim() || !message.trim()) {
       setErrorMsg(lang === "en" ? "Please fill in all required fields." : "Vui lòng nhập đầy đủ các thông tin bắt buộc.");
@@ -61,14 +61,45 @@ export default function FeedbackPage() {
     setErrorMsg("");
     setIsSubmitting(true);
 
-    // Simulate sending feedback API
-    setTimeout(() => {
+    const token = localStorage.getItem("zeflyo_token");
+    const apiBaseUrl = localStorage.getItem("zeflyo_api_base") || "http://localhost";
+
+    let backendType = "other";
+    if (category === "bug") backendType = "bug";
+    else if (category === "feature") backendType = "feature_request";
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/feedback`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify({
+          type: backendType,
+          title: subject,
+          content: message,
+          contact_email: userEmail || null,
+          image_urls: null
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setIsSubmitting(false);
+        setSubmitSuccess(true);
+        setSubject("");
+        setMessage("");
+        setRating(0);
+      } else {
+        setErrorMsg(data.message || (lang === "en" ? "Failed to send feedback." : "Gửi phản hồi thất bại."));
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      setErrorMsg(lang === "en" ? "Server connection error." : "Lỗi kết nối đến máy chủ.");
       setIsSubmitting(false);
-      setSubmitSuccess(true);
-      setSubject("");
-      setMessage("");
-      setRating(0);
-    }, 1500);
+    }
   };
 
   return (

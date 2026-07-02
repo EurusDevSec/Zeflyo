@@ -3,13 +3,15 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Carbon\Carbon;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password', 'display_name', 'avatar_url', 'timezone', 'credits', 'subscription_plan', 'subscription_expires_at', 'phone', 'referral_phone', 'uid', 'last_checkin_at', 'last_free_credits_at'])]
@@ -23,7 +25,7 @@ class User extends Authenticatable
     {
         static::creating(function ($user) {
             if (empty($user->uid)) {
-                $user->uid = \Illuminate\Support\Str::random(28);
+                $user->uid = Str::random(28);
             }
         });
     }
@@ -31,12 +33,13 @@ class User extends Authenticatable
     public function getUidAttribute($value)
     {
         if (empty($value)) {
-            $value = \Illuminate\Support\Str::random(28);
+            $value = Str::random(28);
             $this->attributes['uid'] = $value;
             if ($this->exists) {
                 $this->save();
             }
         }
+
         return $value;
     }
 
@@ -60,7 +63,7 @@ class User extends Authenticatable
     public function checkAndAwardDailyFreeCredits()
     {
         if ($this->subscription_plan === 'free') {
-            $today = \Carbon\Carbon::now($this->timezone ?? 'Asia/Ho_Chi_Minh')->toDateString();
+            $today = Carbon::now($this->timezone ?? 'Asia/Ho_Chi_Minh')->toDateString();
             if (empty($this->last_free_credits_at) || $this->last_free_credits_at < $today) {
                 $this->credits = ($this->credits ?? 0) + 100;
                 $this->last_free_credits_at = $today;
@@ -72,7 +75,7 @@ class User extends Authenticatable
     /**
      * Get the fanpages managed by this user.
      */
-    public function fanpages(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function fanpages(): HasMany
     {
         return $this->hasMany(Fanpage::class);
     }
@@ -80,22 +83,22 @@ class User extends Authenticatable
     /**
      * Get the scheduled posts created by this user.
      */
-    public function scheduledPosts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function scheduledPosts(): HasMany
     {
         return $this->hasMany(ScheduledPost::class);
     }
 
-    public function autoSetups(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function autoSetups(): HasMany
     {
         return $this->hasMany(AutoSetup::class);
     }
 
-    public function products(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function products(): HasMany
     {
         return $this->hasMany(Product::class);
     }
 
-    public function checkins(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function checkins(): HasMany
     {
         return $this->hasMany(UserCheckin::class);
     }
